@@ -1,0 +1,106 @@
+.hero{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: url('../../assets/hero-bg.jpg') no-repeat center center/cover;
+  background-attachment: fixed;
+  position: relative;
+  overflow: hidden;
+  
+  
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom,
+            rgba(15, 23, 42, 0.6) 0%,
+            rgba(15, 23, 42, 0.3) 60%,
+            #0f172a 100%);
+    z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  margin-top: 4rem;
+  max-width: 1000px;
+  padding: 2rem;
+}
+
+.hero-title{
+  font-size: 6rem;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1.14;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.05em;
+}
+
+.hero-subtitle {
+    font-size: 1.75rem;
+    color: rgba(255, 255, 255, 0.9);
+    max-width: 800px;
+    margin: 0 auto 3rem;
+    line-height: 1.2;
+}
+
+.hero-title span {
+  color: #10b981;
+  background: linear-gradient(to right, #10b981, #34d399);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;  
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 1.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #10b981;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn.btn-secondary{
+  background-color: white;
+  color: #131413;
+  border: none;
+  transition: background-color 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.btn.btn-secondary:hover {
+  
+   background-color: #d3dbd8;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);}
+
+.btn.btn-primary{
+  transition: background-color 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  gap: 1rem;
+}
+
+.btn.btn-primary:hover {
+  background-color: #059669;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}

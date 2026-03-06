@@ -1,0 +1,117 @@
+.path-card{
+  background:  rgba(30, 41, 59, 0.3);
+  backdrop-filter: blur(40px);
+ -webkit-backdrop-filter: blur(40px);
+ border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  border-radius: 70px;
+  padding: 40px;
+  height: 700px;
+  width: 350px;
+  position: relative;
+  overflow: hidden;
+  perspective: 1000px;
+}
+
+.path-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.path-card:hover::before {
+    opacity: 1;
+}
+
+.path-card:hover {
+    transform: translateY(-20px) scale(1.02);
+    background: rgba(30, 41, 59, 0.6);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow:
+        0 40px 120px -20px rgba(0, 0, 0, 0.8),
+        0 0 50px rgba(255, 255, 255, 0.05);
+    
+}
+
+.path-card-icon-container {
+    width: 80px;
+    height: 80px;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2.5rem;
+    color: #ffffff;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    z-index: 1;
+    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+.path-card:hover .path-card-icon-container {
+    transform: scale(1) rotate(10deg);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.path-header {
+    margin-bottom: 2.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.path-question {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 1rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.path-card h3 {
+    font-size: 2.75rem;
+    font-weight: 900;
+    color: white;
+    line-height: 1;
+    letter-spacing: -0.04em;
+}
+
+.path-card p {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.125rem;
+    margin-bottom: 3.5rem;
+    line-height: 1.6;
+    flex-grow: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.path-card-btn {
+    width: 100%;
+    height: 60px;
+    font-size: 1.125rem;
+    font-weight: 800;
+    border-radius: 20px;
+    background-color: #ffffff;
+    color: rgb(0, 0, 0, 0.8);
+    position: relative;
+    z-index: 1;
+}
+
+
+

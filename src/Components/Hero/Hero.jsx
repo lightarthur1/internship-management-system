@@ -1,8 +1,12 @@
 import React from 'react'
 import './Hero.css'
 import {ArrowRight} from 'lucide-react'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 
 const Hero = () => {
+
+  const navigate = useNavigate();
+
   return (
     <div className='hero'>
       <div className='hero-content'>
@@ -16,9 +20,20 @@ const Hero = () => {
          </p>
 
          <div className='hero-buttons'>
-           <button className='btn btn-primary'>Get Started <span><ArrowRight color="#fff"/></span></button>
-           <button className='btn btn-secondary'>Sign in</button>
+
+        
+           <Link to={'/signup'}
+           className='btn btn-primary'
+           >Get Started <span><ArrowRight color="#fff"/></span></Link>
+      
+
+     
+           <Link to={'/login'}
+           className='btn btn-secondary'>Sign in
+           </Link>
+            
          </div>
+     
       </div>
 
     </div>

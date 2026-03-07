@@ -49,7 +49,8 @@ const Navbar = () => {
       
       <div className="nav-links-container">
         <Link className='nav-link' to="/login" >Login</Link>
-        <button className='signup-button'>Sign Up</button>
+        <Link to='/signup'><button className='signup-button'>Sign Up</button>
+        </Link>
       </div>
     </div>
     </nav>

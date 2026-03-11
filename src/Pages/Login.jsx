@@ -14,7 +14,7 @@ const handleSubmit = async (e) => {
     e.preventDefault();
     
     // 1. Capture the return value of login() directly
-    const loggedInUser = await login(email, password); 
+    const loggedInUser = login(email, password); 
     
     // 2. Use the returned user object, which is guaranteed to be up-to-date
     if (loggedInUser) {

@@ -15,7 +15,13 @@ const Signup = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         signup({ name, email, role });
-        navigate('/dashboard');
+        switch (role) {
+            case 'student': navigate('/student'); break;
+            case 'admin': navigate('/admin'); break;
+            case 'academic-supervisor': navigate('/academic-supervisor'); break;
+            case 'workplace-supervisor': navigate('/workplace-supervisor'); break;
+            default: navigate('/login');
+        }
     };
 
     return (

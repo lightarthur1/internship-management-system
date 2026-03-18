@@ -1,0 +1,42 @@
+.admin-review-card{
+  background-color: rgb(255, 255, 255);
+  height: 10rem;
+  width: 20rem;
+  border: 1px solid rgba(154, 154, 159, 0.429);
+  border-radius: 15px;
+}
+
+.card-header {
+  color: #444; 
+  display: flex;
+  justify-content: space-between; 
+  align-items: center;
+  width: 100%;
+  margin-bottom: 50px;
+}
+
+.card-header p {
+  margin: 0;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.number {
+  color: black;
+  font-size: 2rem;
+  margin: 0;
+  margin-top: auto; 
+  text-align: left; 
+}
+
+
+
+
+.card-info{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; 
+  height: 100%;
+  padding: 20px; 
+
+}

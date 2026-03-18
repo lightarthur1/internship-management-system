@@ -1,0 +1,115 @@
+.preview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.preview-box {
+  position: relative;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 580px;
+  margin: 0 16px;
+  padding: 32px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.preview-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+}
+
+.preview-close:hover {
+  color: #374151;
+  background: #f3f4f6;
+}
+
+.preview-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+
+.preview-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 24px 0;
+}
+
+/* The letter document itself */
+.preview-letter {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.preview-letter-date {
+  text-align: right;
+  font-size: 14px;
+  color: #374151;
+  margin: 0;
+}
+
+.preview-letter-line {
+  font-size: 14px;
+  color: #1f2937;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.preview-letter-salutation {
+  margin-top: 8px;
+}
+
+.preview-letter-body {
+  font-size: 14px;
+  color: #1f2937;
+  margin: 0;
+  line-height: 1.7;
+}
+
+.preview-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.preview-close-btn {
+  padding: 10px 24px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: inherit;
+}
+
+.preview-close-btn:hover {
+  background: #f9fafb;
+}

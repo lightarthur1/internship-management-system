@@ -12,16 +12,18 @@ const Signup = () => {
     const { signup } = useAuth();
     const navigate = useNavigate();
 
+    const roleRoutes = {
+        student: '/student',
+        admin: '/admin',
+        'academic-supervisor': '/academic-supervisor',
+        'workplace-supervisor': '/workplace-supervisor',
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         signup({ name, email, role });
-        switch (role) {
-            case 'student': navigate('/student'); break;
-            case 'admin': navigate('/admin'); break;
-            case 'academic-supervisor': navigate('/academic-supervisor'); break;
-            case 'workplace-supervisor': navigate('/workplace-supervisor'); break;
-            default: navigate('/login');
-        }
+        const destination = roleRoutes[role] || '/login';
+        navigate(destination);
     };
 
     return (

@@ -1,14 +1,13 @@
 import React from 'react'
-import { BiComment } from 'react-icons/bi'
 import { IoArrowBack } from 'react-icons/io5'
-import { LuThumbsDown, LuThumbsUp } from 'react-icons/lu'
+import { LuThumbsUp } from 'react-icons/lu'
 import { VscThumbsupFilled } from 'react-icons/vsc'
 
 function ViewReports() {
   
   return (
-    <div className='bg-blue-50 '>
-      <div className="bg-white border-b border-gray-200 px-8 py-6 mx-auto">
+    <div className='bg-blue-500 '>
+      <div className="bg-white border-b border-gray-200 px-8 py-6">
 
   <button
     onClick={() => navigate("/academic-supervisor")}
@@ -27,7 +26,7 @@ function ViewReports() {
   </p>
 
 </div>
-<div className='max-w-6xl mt-8  border border-gray-200 p-8 rounded-xl bg-white m-8 mx-auto '>
+<div className='max-w-6xl mt-8  border border-gray-200 p-8 rounded-xl bg-white m-8'>
 <p className='text-black text-xl font-semibold'>Internship Reports</p>
 <p className='text-gray-400 font-thin'>Review and provide feedback on students progress</p>
 <div className='border border-gray-200 max-w-5xl rounded-xl shadow-sm items-center mt-8'>
@@ -150,32 +149,18 @@ function ViewReports() {
   
 </div>
   <div className="mt-4 bg-gray-50 rounded-md p-4 text-gray-700 text-sm">
-Working on database integration and API endpoints for user management. Created RESTful endpoints for CRUD operations. Implemented data validation middleware.
+    This week I worked on the user authentication module. Implemented login and
+    registration features using JWT tokens. Also started working on password
+    reset functionality.
   </div>
 
- <div className='flex gap-8 items-center justify max-w-6xl'>
-   <div className="flex items-center gap-5">
- <span className='p-4 w-60 h-3 border border-gray-200 rounded-xl flex items-center gap-8'>
-  <LuThumbsUp className='text-black' />
-  <p className='text-black'>Like</p>
+  <div className="mt-4 border border-blue-200 bg-blue-50 rounded-md p-4">
+ <span>
+  <LuThumbsUp />
+  <p>Like</p>
  </span>
    
 </div>
-<div className="flex items-center gap-5">
- <span className='p-4 w-60 h-3 border border-gray-200 rounded-xl flex items-center gap-8'>
-  <LuThumbsDown className='text-black' />
-  <p className='text-black'>Dislike</p>
- </span>
-   
-</div>
-<div className="flex items-center gap-5">
- <span className='p-4 w-60 h-3 border border-gray-200 rounded-xl flex items-center gap-8'>
-  <BiComment className='text-black' />
-  <p className='text-black'>Comment</p>
- </span>
-   
-</div>
- </div>
 
 
 </div>

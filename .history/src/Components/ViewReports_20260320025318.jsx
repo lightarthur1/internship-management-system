@@ -150,26 +150,26 @@ function ViewReports() {
   
 </div>
   <div className="mt-4 bg-gray-50 rounded-md p-4 text-gray-700 text-sm">
-Working on database integration and API endpoints for user management. Created RESTful endpoints for CRUD operations. Implemented data validation middleware.
+v
   </div>
 
  <div className='flex gap-8 items-center justify max-w-6xl'>
    <div className="flex items-center gap-5">
- <span className='p-4 w-60 h-3 border border-gray-200 rounded-xl flex items-center gap-8'>
+ <span className='p-4 w-40 h-3 border border-gray-200 rounded-xl flex items-center gap-8'>
   <LuThumbsUp className='text-black' />
   <p className='text-black'>Like</p>
  </span>
    
 </div>
 <div className="flex items-center gap-5">
- <span className='p-4 w-60 h-3 border border-gray-200 rounded-xl flex items-center gap-8'>
+ <span className='p-4 w-40 h-3 border border-gray-200 rounded-xl flex items-center gap-8'>
   <LuThumbsDown className='text-black' />
   <p className='text-black'>Dislike</p>
  </span>
    
 </div>
 <div className="flex items-center gap-5">
- <span className='p-4 w-60 h-3 border border-gray-200 rounded-xl flex items-center gap-8'>
+ <span className='p-4 w-40 h-3 border border-gray-200 rounded-xl flex items-center gap-8'>
   <BiComment className='text-black' />
   <p className='text-black'>Comment</p>
  </span>

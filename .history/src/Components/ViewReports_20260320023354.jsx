@@ -77,8 +77,7 @@ function ViewReports() {
 
   </div>
 </div>
-<div className='border border-gray-200 max-w-5xl rounded-xl shadow-sm items-center mt-8'>
- <div className="mt-6 rounded-lg  p-4">
+ <div className="mt-6 rounded-lg  border border-gray-200 p-4">
 
   <div className="flex items-center justify-between">
 
@@ -121,7 +120,6 @@ function ViewReports() {
     </p>
 </div>
 </div>
-</div>
 <div className='border border-gray-200 max-w-5xl rounded-xl shadow-sm items-center mt-8'>
    
   <div className="mt-6 rounded-lg p-4">
@@ -139,11 +137,14 @@ function ViewReports() {
       </span>
 
       <span className="bg-green-100 text-green-800 text-xs font-medium px-3 py-1 rounded-full">
-        pending
+        reviewed
       </span>
 
     </div>
 
+    <span className="text-green-600 text-xl">
+        <VscThumbsupFilled className="text-green-400" />
+    </span>
 
   
 </div>

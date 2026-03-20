@@ -77,8 +77,8 @@ function ViewReports() {
 
   </div>
 </div>
-<div className='border border-gray-200 max-w-5xl rounded-xl shadow-sm items-center mt-8'>
- <div className="mt-6 rounded-lg  p-4">
+</div>
+ <div className="mt-6 rounded-lg p-4">
 
   <div className="flex items-center justify-between">
 
@@ -119,53 +119,6 @@ function ViewReports() {
     <p className="text-sm text-blue-800 mt-1">
       Good progress! Make sure to add proper validation and error handling.
     </p>
-</div>
-</div>
-</div>
-<div className='border border-gray-200 max-w-5xl rounded-xl shadow-sm items-center mt-8'>
-   
-  <div className="mt-6 rounded-lg p-4">
-
-  <div className="flex items-center justify-between">
-
-    <div className="flex items-center gap-3">
-
-      <span className="font-medium text-gray-900">
-        2/21/2026
-      </span>
-
-      <span className="bg-green-100 text-green-800 text-xs font-medium px-3 py-1 rounded-full">
-        weekly
-      </span>
-
-      <span className="bg-green-100 text-green-800 text-xs font-medium px-3 py-1 rounded-full">
-        pending
-      </span>
-
-    </div>
-
-
-  
-</div>
-  <div className="mt-4 bg-gray-50 rounded-md p-4 text-gray-700 text-sm">
-    This week I worked on the user authentication module. Implemented login and
-    registration features using JWT tokens. Also started working on password
-    reset functionality.
-  </div>
-
-  <div className="mt-4 border border-blue-200 bg-blue-50 rounded-md p-4">
-
-    <p className="text-sm text-blue-700 font-medium">
-      Your Feedback:
-    </p>
-
-    <p className="text-sm text-blue-800 mt-1">
-      Good progress! Make sure to add proper validation and error handling.
-    </p>
-</div>
-
-
-</div>
 </div>
 </div>
 </div>

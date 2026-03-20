@@ -10,7 +10,7 @@ import WorkplaceSupervisorDashboard from './Dashboards/WorkplaceSupervisorDashbo
 import { BrowserRouter,Route,Routes,Navigate } from 'react-router-dom';
 import DashboardRedirect from './Components/DashboardRedirect';
 import { AuthProvider, useAuth } from './Context/AuthContext';
-import ViewReports from './Components/ViewReports';
+
 const App = () => {
   return (
     <AuthProvider>
@@ -39,12 +39,6 @@ const App = () => {
               <AcademicSupervisorDashboard />
             </ProtectedRoute>
           } />
-            <Route path="/view-report" element={
-            <ProtectedRoute allowedRoles={['academic-supervisor']}>
-              <ViewReports/>
-            </ProtectedRoute>
-          } />
-
 
           <Route path="/workplace-supervisor" element={
             <ProtectedRoute allowedRoles={['workplace-supervisor']}>

@@ -12,7 +12,7 @@ function ViewReports() {
   return (
     <div className="vr-page">
 
-      {/* Header */}
+      {/* ── Header ── */}
       <div className="vr-header">
         <button
           onClick={() => navigate("/academic-supervisor")}
@@ -28,14 +28,14 @@ function ViewReports() {
         </p>
       </div>
 
-      {/* Main card */}
+      {/* ── Main card ── */}
       <div className="vr-card">
         <p className="vr-card-title">Internship Reports</p>
         <p className="vr-card-subtitle">
           Review and provide feedback on students progress
         </p>
 
-        {/*Report 1 — reviewed */}
+        {/* ── Report 1 — reviewed ── */}
         <div className="vr-report">
           <div className="vr-report-inner">
             <div className="vr-report-header">
@@ -92,7 +92,7 @@ function ViewReports() {
           </div>
         </div>
 
-        {/* Report 3*/}
+        {/* ── Report 3 — pending ── */}
         <div className="vr-report">
           <div className="vr-report-inner">
             <div className="vr-report-header">
@@ -110,15 +110,15 @@ function ViewReports() {
             </div>
 
             <div className="vr-actions">
-              <button className="vr-cta-btn">
+              <button className="vr-action-btn">
                 <LuThumbsUp />
                 Like
               </button>
-              <button className="vr-cta-btn">
+              <button className="vr-action-btn">
                 <LuThumbsDown />
                 Dislike
               </button>
-              <button className="vr-cta-btn">
+              <button className="vr-action-btn">
                 <BiComment />
                 Comment
               </button>

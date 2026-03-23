@@ -3,7 +3,7 @@ import { FiUser } from "react-icons/fi";
 import Navbar from '../Components/Navbar/Navbar'
 import { FaRegFileLines } from "react-icons/fa6";
 import { useNavigate } from 'react-router-dom';
-import './AcademicSupervisor.css'
+import './AcademicSupervisorDashboard.css'
 
 const AcademicSupervisorDashboard = () => {
   const navigate = useNavigate();

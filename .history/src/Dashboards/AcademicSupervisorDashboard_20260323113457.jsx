@@ -15,54 +15,54 @@ const AcademicSupervisorDashboard = () => {
       <main className="asd-main">
         <div className="asd-container">
 
-          {/* ── Supervisor Info ── */}
-          <div className="asd-info-card">
-            <h2 className="asd-info-title">Supervisor Information</h2>
+          {/* Supervisor Info */}
+          <div className="info-card">
+            <h2 className="info-title">Supervisor Information</h2>
 
-            <div className="asd-info-grid">
+            <div className="info-grid">
               <div>
-                <p className="asd-info-label">Name</p>
-                <p className="asd-info-value">Dr. Sarah Williams</p>
+                <p className="info-label">Name</p>
+                <p className="info-value">Dr. Sarah Williams</p>
               </div>
               <div>
-                <p className="asd-info-label">Department</p>
-                <p className="asd-info-value">Computer Science</p>
+                <p className="info-label">Department</p>
+                <p className="info-value">Computer Science</p>
               </div>
               <div>
-                <p className="asd-info-label">Email</p>
-                <p className="asd-info-value">sarah.w@university.edu</p>
+                <p className="info-label">Email</p>
+                <p className="info-value">sarah.w@university.edu</p>
               </div>
             </div>
           </div>
 
-          {/* ── Stats row ── */}
-          <div className="asd-stats-grid">
+          {/*Stats row */}
+          <div className="stats-grid">
 
             {/* Assigned Students */}
-            <div className="asd-stat-card">
-              <div className="asd-stat-header">
-                <h3 className="asd-stat-label">Assigned Students</h3>
-                <FiUser className="asd-stat-icon" />
+            <div className="stat-card">
+              <div className="stat-header">
+                <h3 className="stat-label">Assigned Students</h3>
+                <FiUser className="stat-icon" />
               </div>
-              <span className="asd-stat-value">3</span>
+              <span className="stat-value">3</span>
             </div>
 
             {/* Total Reports */}
-            <div className="asd-stat-card">
-              <div className="asd-stat-header">
-                <h3 className="asd-stat-label">Total Reports</h3>
-                <FaRegFileLines className="asd-stat-icon" />
+            <div className="-stat-card">
+              <div className="-stat-header">
+                <h3 className="stat-label">Total Reports</h3>
+                <FaRegFileLines className="stat-icon" />
               </div>
-              <span className="asd-stat-value">9</span>
+              <span className="stat-value">9</span>
             </div>
 
             {/* Pending Reviews */}
-            <div className="asd-stat-card">
-              <div className="asd-stat-header">
-                <h3 className="asd-stat-label">Pending Reviews</h3>
+            <div className="stat-card">
+              <div className="stat-header">
+                <h3 className="stat-label">Pending Reviews</h3>
                 <FaRegFileLines className="asd-stat-icon--orange" />
               </div>
-              <span className="asd-stat-value--orange">3</span>
+              <span className="stat-value--orange">3</span>
             </div>
 
           </div>

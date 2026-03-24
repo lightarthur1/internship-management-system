@@ -39,7 +39,7 @@ const App = () => {
               <AcademicSupervisorDashboard />
             </ProtectedRoute>
           } />
-            <Route path="/view-reports" element={
+            <Route path="/view-report" element={
             <ProtectedRoute allowedRoles={['academic-supervisor']}>
               <ViewReports/>
             </ProtectedRoute>

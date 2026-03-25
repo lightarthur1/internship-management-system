@@ -50,6 +50,282 @@ const Pill = ({ label, variant = "success" }) => {
   return <span style={{ background: bg, color, borderRadius: 20, padding: "3px 10px", fontSize: 12, fontWeight: 700, display: "inline-block", whiteSpace: "nowrap" }}>{label}</span>;
 };
 
+// ─── Supervisor Report Modal ──────────────────────────────────────────────
+function SupervisorReportModal({ intern, existingReport, onSave, onClose }) {
+  const { sm } = useBreakpoint();
+  const [form, setForm] = useState({
+    period: existingReport?.period || "",
+    attendance: existingReport?.attendance || "",
+    performance: existingReport?.performance || "",
+    skills: existingReport?.skills || "",
+    attitude: existingReport?.attitude || "",
+    challenges: existingReport?.challenges || "",
+    achievements: existingReport?.achievements || "",
+    recommendation: existingReport?.recommendation || "",
+    rating: existingReport?.rating || "3",
+    comments: existingReport?.comments || "",
+  });
+  const [saved, setSaved] = useState(false);
+
+  const ratingLabels = { "1": "Poor", "2": "Below Avg", "3": "Average", "4": "Good", "5": "Excellent" };
+  const ratingColors = { "1": "#d32f2f", "2": C.ember, "3": "#f9a825", "4": "#388e3c", "5": C.forest };
+  const starIcons = { "1": "★", "2": "★★", "3": "★★★", "4": "★★★★", "5": "★★★★★" };
+
+  const handleSave = () => {
+    onSave({ ...form, internId: intern.id, internName: intern.name, createdAt: new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) });
+    setSaved(true);
+    setTimeout(() => { setSaved(false); onClose(); }, 1200);
+  };
+
+  const fields = [
+    { k: "period", label: "Reporting Period", placeholder: "e.g. February – March 2026", type: "text" },
+    { k: "attendance", label: "Attendance & Punctuality", placeholder: "Describe intern's attendance record…", type: "textarea" },
+    { k: "performance", label: "Work Performance", placeholder: "Evaluate the quality and quantity of work done…", type: "textarea" },
+    { k: "skills", label: "Skills Demonstrated", placeholder: "Technical and soft skills observed…", type: "textarea" },
+    { k: "attitude", label: "Attitude & Conduct", placeholder: "How does the intern relate with colleagues and carry themselves?", type: "textarea" },
+    { k: "achievements", label: "Key Achievements", placeholder: "Notable accomplishments during this period…", type: "textarea" },
+    { k: "challenges", label: "Areas for Improvement", placeholder: "Where does the intern need to improve?", type: "textarea" },
+    { k: "recommendation", label: "Supervisor Recommendation", placeholder: "Your overall recommendation for this intern…", type: "textarea" },
+    { k: "comments", label: "Additional Comments", placeholder: "Any other remarks…", type: "textarea" },
+  ];
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 1000, display: "flex", alignItems: "flex-end", justifyContent: "center", backdropFilter: "blur(3px)" }}
+      onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{ background: C.white, borderRadius: sm ? "20px 20px 0 0" : 20, width: "100%", maxWidth: 680, maxHeight: "92vh", overflowY: "auto", boxShadow: "0 -8px 60px rgba(0,0,0,0.22)", boxSizing: "border-box" }}>
+        {/* Modal Header */}
+        <div style={{ background: `linear-gradient(135deg, ${C.forest}, ${C.forestMid})`, borderRadius: sm ? "20px 20px 0 0" : "20px 20px 0 0", padding: sm ? "18px 18px 16px" : "22px 28px 20px", color: "#fff", position: "sticky", top: 0, zIndex: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <Avatar name={intern.name} size={38} bg="rgba(255,255,255,0.18)" />
+              <div>
+                <div style={{ fontWeight: 800, fontSize: sm ? 15 : 17 }}>{existingReport ? "Edit" : "Write"} Supervisor Report</div>
+                <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 12 }}>{intern.name} · {intern.course}</div>
+              </div>
+            </div>
+            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>✕</button>
+          </div>
+          <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 10, padding: "8px 12px", fontSize: 12, color: "rgba(255,255,255,0.75)" }}>
+            📝 This report will be saved to the intern's profile and used for final evaluation.
+          </div>
+        </div>
+
+        <div style={{ padding: sm ? "18px" : "24px 28px" }}>
+          {/* Overall Rating — fixed, no emoji stacking */}
+          <div style={{ background: C.sage, borderRadius: 14, padding: sm ? "14px" : "18px", marginBottom: 20, border: `1px solid ${C.border}` }}>
+            <div style={{ fontWeight: 700, fontSize: 14, color: C.text, marginBottom: 12 }}>Overall Performance Rating</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+              {["1", "2", "3", "4", "5"].map(v => (
+                <button key={v} onClick={() => setForm(p => ({ ...p, rating: v }))}
+                  style={{ padding: "10px 4px", border: `2px solid ${form.rating === v ? ratingColors[v] : C.border}`, borderRadius: 10, background: form.rating === v ? ratingColors[v] + "18" : C.white, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s", textAlign: "center" }}>
+                  <div style={{ fontSize: 20, color: "#f9a825", letterSpacing: 1, lineHeight: 1.2 }}>{starIcons[v]}</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: form.rating === v ? ratingColors[v] : C.muted, marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ratingLabels[v]}</div>
+                  <div style={{ fontSize: 11, color: form.rating === v ? ratingColors[v] : C.muted, fontWeight: 800 }}>{v}/5</div>
+                </button>
+              ))}
+            </div>
+            <div style={{ marginTop: 10, fontSize: 13, color: ratingColors[form.rating], fontWeight: 700 }}>
+              Selected: {ratingLabels[form.rating]} ({form.rating}/5)
+            </div>
+          </div>
+
+          {/* Form Fields */}
+          {fields.map(({ k, label, placeholder, type }) => (
+            <div key={k} style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 6 }}>{label}</label>
+              {type === "textarea" ? (
+                <textarea
+                  rows={3}
+                  placeholder={placeholder}
+                  value={form[k]}
+                  onChange={e => setForm(p => ({ ...p, [k]: e.target.value }))}
+                  style={{ width: "100%", padding: "10px 14px", border: `1.5px solid ${C.border}`, borderRadius: 10, fontSize: 13, fontFamily: "inherit", color: C.text, background: "#fafcfb", boxSizing: "border-box", outline: "none", resize: "vertical", lineHeight: 1.6 }}
+                />
+              ) : (
+                <input
+                  type="text"
+                  placeholder={placeholder}
+                  value={form[k]}
+                  onChange={e => setForm(p => ({ ...p, [k]: e.target.value }))}
+                  style={{ width: "100%", padding: "10px 14px", border: `1.5px solid ${C.border}`, borderRadius: 10, fontSize: 13, fontFamily: "inherit", color: C.text, background: "#fafcfb", boxSizing: "border-box", outline: "none" }}
+                />
+              )}
+            </div>
+          ))}
+
+          {/* Save Button */}
+          <div style={{ display: "flex", gap: 10, marginTop: 8, position: "sticky", bottom: 0, background: C.white, paddingTop: 12, paddingBottom: sm ? 16 : 8 }}>
+            <button onClick={onClose} style={{ flex: 1, padding: "12px", background: C.sage, color: C.text, border: `1px solid ${C.border}`, borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+              Cancel
+            </button>
+            <button onClick={handleSave}
+              style={{ flex: 2, padding: "12px", background: saved ? C.success : C.forest, color: "#fff", border: "none", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", transition: "background 0.3s" }}>
+              {saved ? "✅ Report Saved!" : existingReport ? "Update Report" : "Save Report"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Download Report ──────────────────────────────────────────────────────
+function downloadReport(report, intern) {
+  const ratingLabels = { "1": "Poor", "2": "Below Average", "3": "Average", "4": "Good", "5": "Excellent" };
+  const stars = "★".repeat(parseInt(report.rating)) + "☆".repeat(5 - parseInt(report.rating));
+
+  const sections = [
+    { label: "Reporting Period", value: report.period },
+    { label: "Attendance & Punctuality", value: report.attendance },
+    { label: "Work Performance", value: report.performance },
+    { label: "Skills Demonstrated", value: report.skills },
+    { label: "Attitude & Conduct", value: report.attitude },
+    { label: "Key Achievements", value: report.achievements },
+    { label: "Areas for Improvement", value: report.challenges },
+    { label: "Supervisor Recommendation", value: report.recommendation },
+    { label: "Additional Comments", value: report.comments },
+  ].filter(s => s.value && s.value.trim());
+
+  const sectionsHTML = sections.map(({ label, value }) => `
+    <div class="section">
+      <div class="section-label">${label}</div>
+      <div class="section-value">${value.replace(/\n/g, "<br>")}</div>
+    </div>
+  `).join("");
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Supervisor Report – ${intern.name}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a2e20; background: #fff; padding: 40px; max-width: 800px; margin: 0 auto; }
+    .header { background: linear-gradient(135deg, #1a3a2a, #2d5a3d); color: white; padding: 32px; border-radius: 12px; margin-bottom: 28px; }
+    .company { font-size: 11px; letter-spacing: 0.1em; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 8px; }
+    .title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+    .subtitle { font-size: 13px; color: rgba(255,255,255,0.65); margin-bottom: 20px; }
+    .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .meta-item { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 14px; }
+    .meta-key { font-size: 10px; color: rgba(255,255,255,0.5); text-transform: uppercase; font-weight: 600; margin-bottom: 3px; }
+    .meta-val { font-size: 13px; font-weight: 600; }
+    .rating-box { background: #eef5f0; border-radius: 12px; padding: 20px; margin-bottom: 24px; display: flex; align-items: center; gap: 16px; border: 1px solid #d4e6d8; }
+    .stars { font-size: 26px; color: #f9a825; letter-spacing: 2px; }
+    .rating-score { font-size: 28px; font-weight: 800; color: #1a3a2a; }
+    .rating-label { font-size: 14px; color: #6b8f72; font-weight: 600; margin-top: 2px; }
+    .section { background: #eef5f0; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+    .section-label { font-size: 10px; font-weight: 700; color: #6b8f72; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .section-value { font-size: 13px; line-height: 1.7; color: #1a2e20; }
+    .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #d4e6d8; display: flex; justify-content: space-between; font-size: 11px; color: #6b8f72; }
+    @media print { body { padding: 20px; } .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="company">Workplace Supervisor · Evaluation Report</div>
+    <div class="title">Supervisor's Evaluation Report</div>
+    <div class="subtitle">${intern.name} · ${intern.course} · ${intern.university}</div>
+    <div class="meta-grid">
+      <div class="meta-item"><div class="meta-key">Student ID</div><div class="meta-val">${intern.id}</div></div>
+      <div class="meta-item"><div class="meta-key">Department</div><div class="meta-val">${intern.department || "Engineering & Technology"}</div></div>
+      <div class="meta-item"><div class="meta-key">Placement Period</div><div class="meta-val">${intern.start} – ${intern.end}</div></div>
+      <div class="meta-item"><div class="meta-key">Report Date</div><div class="meta-val">${report.createdAt}</div></div>
+    </div>
+  </div>
+
+  <div class="rating-box">
+    <div>
+      <div class="stars">${stars}</div>
+    </div>
+    <div>
+      <div class="rating-score">${report.rating} / 5</div>
+      <div class="rating-label">${ratingLabels[report.rating]}</div>
+    </div>
+  </div>
+
+  ${sectionsHTML}
+
+  <div class="footer">
+    <span>Generated by Workplace Supervisor Dashboard</span>
+    <span>${report.createdAt}</span>
+  </div>
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Supervisor_Report_${intern.name.replace(/\s+/g, "_")}_${report.createdAt.replace(/,?\s+/g, "_")}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── Supervisor Report View ───────────────────────────────────────────────
+function SupervisorReportView({ report, intern, onEdit, sm }) {
+  const ratingLabels = { "1": "Poor", "2": "Below Average", "3": "Average", "4": "Good", "5": "Excellent" };
+  const ratingColors = { "1": "#d32f2f", "2": C.ember, "3": "#f9a825", "4": "#388e3c", "5": C.forest };
+
+  const sections = [
+    { label: "Reporting Period", value: report.period, icon: "📅" },
+    { label: "Attendance & Punctuality", value: report.attendance, icon: "🕐" },
+    { label: "Work Performance", value: report.performance, icon: "💼" },
+    { label: "Skills Demonstrated", value: report.skills, icon: "🛠" },
+    { label: "Attitude & Conduct", value: report.attitude, icon: "🤝" },
+    { label: "Key Achievements", value: report.achievements, icon: "🏆" },
+    { label: "Areas for Improvement", value: report.challenges, icon: "📈" },
+    { label: "Supervisor Recommendation", value: report.recommendation, icon: "✍️" },
+    { label: "Additional Comments", value: report.comments, icon: "💬" },
+  ].filter(s => s.value && s.value.trim());
+
+  return (
+    <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden" }}>
+      {/* Report Header */}
+      <div style={{ background: `linear-gradient(135deg, ${C.forest}, ${C.forestMid})`, padding: sm ? "14px" : "18px 22px", color: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+        <div>
+          <div style={{ fontWeight: 800, fontSize: 15 }}>Supervisor's Report</div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>Written on {report.createdAt}</div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 10, padding: "6px 12px", textAlign: "center" }}>
+            <div style={{ fontWeight: 800, fontSize: 18, color: "#fff" }}>{report.rating}/5</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.65)" }}>{ratingLabels[report.rating]}</div>
+          </div>
+          <button onClick={() => downloadReport(report, intern)}
+            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "#fff", borderRadius: 8, padding: "7px 14px", cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: "inherit", whiteSpace: "nowrap" }}>
+            ⬇ Download
+          </button>
+          <button onClick={onEdit} style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "#fff", borderRadius: 8, padding: "7px 14px", cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: "inherit", whiteSpace: "nowrap" }}>
+            ✏️ Edit
+          </button>
+        </div>
+      </div>
+
+      {/* Star Rating Visual — fixed, individual spans */}
+      <div style={{ padding: sm ? "12px 14px 0" : "14px 22px 0", display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex" }}>
+          {[1,2,3,4,5].map(s => (
+            <span key={s} style={{ fontSize: 22, color: s <= parseInt(report.rating) ? "#f9a825" : "#ddd", lineHeight: 1 }}>★</span>
+          ))}
+        </div>
+        <span style={{ fontSize: 13, fontWeight: 700, color: ratingColors[report.rating] }}>{ratingLabels[report.rating]}</span>
+      </div>
+
+      {/* Report Sections */}
+      <div style={{ padding: sm ? "12px 14px" : "16px 22px", display: "flex", flexDirection: "column", gap: 12 }}>
+        {sections.map(({ label, value, icon }) => (
+          <div key={label} style={{ background: C.sage, borderRadius: 12, padding: "12px 14px" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 5, display: "flex", alignItems: "center", gap: 5 }}>
+              <span>{icon}</span> {label}
+            </div>
+            <div style={{ fontSize: 13, color: C.text, lineHeight: 1.65 }}>{value}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Onboarding ───────────────────────────────────────────────────────────
 function Onboarding({ onComplete }) {
   const { sm } = useBreakpoint();
@@ -100,7 +376,7 @@ function Onboarding({ onComplete }) {
 }
 
 // ─── Navbar ───────────────────────────────────────────────────────────────
-function Navbar({  page, onBack, onLogout, breadcrumb }) {
+function Navbar({ page, onBack, onLogout, breadcrumb }) {
   const { sm } = useBreakpoint();
   const pageLabels = { interns: "All Interns", submitted: "Submitted Reports", pending: "Pending Reports", internDetail: "Intern Profile" };
   return (
@@ -153,14 +429,13 @@ function StatCard({ label, value, icon, accent, sub, onClick }) {
 }
 
 // ─── Dashboard ────────────────────────────────────────────────────────────
-function Dashboard({ supervisor, interns, reports, onNav }) {
+function Dashboard({ supervisor, interns, reports, supervisorReports, onNav, onWriteReport }) {
   const { sm, md } = useBreakpoint();
   const submitted = reports.filter(r => r.status === "submitted").length;
   const pending = reports.filter(r => r.status === "pending").length;
 
   return (
     <div style={{ maxWidth: 1060, margin: "0 auto", padding: sm ? "14px 12px" : "28px 20px", boxSizing: "border-box" }}>
-
       {/* Supervisor Hero */}
       <div style={{ background: `linear-gradient(135deg, ${C.forest}, ${C.forestMid})`, borderRadius: 18, padding: sm ? "18px" : "26px 30px", marginBottom: 14, color: "#fff", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", right: -30, top: -30, width: 130, height: 130, borderRadius: "50%", background: "rgba(255,255,255,0.06)", pointerEvents: "none" }} />
@@ -200,13 +475,22 @@ function Dashboard({ supervisor, interns, reports, onNav }) {
           </div>
           <button onClick={() => onNav("interns")} style={{ background: C.sage, border: `1px solid ${C.mint}`, borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontSize: 13, fontWeight: 600, color: C.forest, fontFamily: "inherit", whiteSpace: "nowrap", flexShrink: 0 }}>View all</button>
         </div>
-        {interns.map(intern => <DashInternRow key={intern.id} intern={intern} reports={reports} onDetail={() => onNav("internDetail", intern)} />)}
+        {interns.map(intern => (
+          <DashInternRow
+            key={intern.id}
+            intern={intern}
+            reports={reports}
+            supervisorReport={supervisorReports[intern.id]}
+            onDetail={() => onNav("internDetail", intern)}
+            onWriteReport={() => onWriteReport(intern)}
+          />
+        ))}
       </div>
     </div>
   );
 }
 
-function DashInternRow({ intern, reports, onDetail }) {
+function DashInternRow({ intern, reports, supervisorReport, onDetail, onWriteReport }) {
   const { sm } = useBreakpoint();
   const [hov, setHov] = useState(false);
   const filed = reports.filter(r => r.internId === intern.id && r.status === "submitted").length;
@@ -222,6 +506,7 @@ function DashInternRow({ intern, reports, onDetail }) {
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2, flexWrap: "wrap" }}>
               <span style={{ fontWeight: 700, fontSize: 14 }}>{intern.name}</span>
               {due && <Badge label="Report Due" />}
+              {supervisorReport && <Badge label="✓ Evaluated" color={C.success} bg={C.successBg} />}
             </div>
             <div style={{ color: C.muted, fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{intern.course} · {intern.university}</div>
             <div style={{ color: C.muted, fontSize: 12 }}>{intern.start} – {intern.end} · <strong style={{ color: C.text }}>{filed}</strong> filed</div>
@@ -229,7 +514,9 @@ function DashInternRow({ intern, reports, onDetail }) {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
           <button onClick={onDetail} style={{ background: C.sage, border: `1px solid ${C.mint}`, borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 12, fontWeight: 600, color: C.forest, fontFamily: "inherit", whiteSpace: "nowrap" }}>Profile</button>
-          <button style={{ background: C.forest, color: "#fff", border: "none", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "inherit", whiteSpace: "nowrap" }}>Submit</button>
+          <button onClick={onWriteReport} style={{ background: supervisorReport ? C.forestLight : C.forest, color: "#fff", border: "none", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "inherit", whiteSpace: "nowrap" }}>
+            {supervisorReport ? "Edit Report" : "Write Report"}
+          </button>
         </div>
       </div>
     </div>
@@ -237,7 +524,7 @@ function DashInternRow({ intern, reports, onDetail }) {
 }
 
 // ─── Interns Screen ───────────────────────────────────────────────────────
-function InternsScreen({ interns, reports, onDetail }) {
+function InternsScreen({ interns, reports, supervisorReports, onDetail, onWriteReport }) {
   const { sm, md } = useBreakpoint();
   const [search, setSearch] = useState("");
   const filtered = interns.filter(i =>
@@ -267,7 +554,16 @@ function InternsScreen({ interns, reports, onDetail }) {
         style={{ width: "100%", padding: "12px 16px", border: `1.5px solid ${C.border}`, borderRadius: 12, fontSize: 14, fontFamily: "inherit", color: C.text, background: C.white, boxSizing: "border-box", outline: "none", marginBottom: 14 }} />
 
       <div style={{ display: "grid", gridTemplateColumns: sm ? "1fr" : md ? "1fr 1fr" : "repeat(3, minmax(0,1fr))", gap: 12 }}>
-        {filtered.map(intern => <InternCard key={intern.id} intern={intern} reports={reports} onClick={() => onDetail(intern)} />)}
+        {filtered.map(intern => (
+          <InternCard
+            key={intern.id}
+            intern={intern}
+            reports={reports}
+            supervisorReport={supervisorReports[intern.id]}
+            onClick={() => onDetail(intern)}
+            onWriteReport={() => onWriteReport(intern)}
+          />
+        ))}
       </div>
       {filtered.length === 0 && (
         <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
@@ -279,7 +575,7 @@ function InternsScreen({ interns, reports, onDetail }) {
   );
 }
 
-function InternCard({ intern, reports, onClick }) {
+function InternCard({ intern, reports, supervisorReport, onClick, onWriteReport }) {
   const [hov, setHov] = useState(false);
   const filed = reports.filter(r => r.internId === intern.id && r.status === "submitted").length;
   const due = reports.some(r => r.internId === intern.id && r.status === "pending");
@@ -287,33 +583,45 @@ function InternCard({ intern, reports, onClick }) {
   const pct = total > 0 ? Math.round((filed / total) * 100) : 0;
 
   return (
-    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} onClick={onClick}
+    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{ background: C.white, borderRadius: 16, border: `1.5px solid ${hov ? C.forestMid : C.border}`, padding: "18px", cursor: "pointer", transition: "all 0.22s", transform: hov ? "translateY(-3px)" : "none", boxShadow: hov ? "0 12px 28px rgba(26,58,42,0.1)" : "0 2px 8px rgba(26,58,42,0.03)", boxSizing: "border-box" }}>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }} onClick={onClick}>
         <Avatar name={intern.name} size={42} bg={C.forestMid} />
         {due ? <Badge label="Report Due" /> : <Pill label="Up to date" variant="success" />}
       </div>
-      <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{intern.name}</div>
-      <div style={{ fontSize: 13, color: C.muted, marginBottom: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{intern.course}</div>
-      <div style={{ fontSize: 13, color: C.muted, marginBottom: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{intern.university}</div>
-      <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 10 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 }}>
-          <span style={{ color: C.muted }}>Reports filed</span>
-          <span style={{ fontWeight: 700, color: C.text }}>{filed}/{total}</span>
+      <div onClick={onClick}>
+        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{intern.name}</div>
+        <div style={{ fontSize: 13, color: C.muted, marginBottom: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{intern.course}</div>
+        <div style={{ fontSize: 13, color: C.muted, marginBottom: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{intern.university}</div>
+        <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 }}>
+            <span style={{ color: C.muted }}>Reports filed</span>
+            <span style={{ fontWeight: 700, color: C.text }}>{filed}/{total}</span>
+          </div>
+          <div style={{ background: C.sage, borderRadius: 99, height: 6, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${pct}%`, background: C.forest, borderRadius: 99 }} />
+          </div>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 5 }}>{intern.start} – {intern.end}</div>
         </div>
-        <div style={{ background: C.sage, borderRadius: 99, height: 6, overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${pct}%`, background: C.forest, borderRadius: 99 }} />
-        </div>
-        <div style={{ fontSize: 12, color: C.muted, marginTop: 5 }}>{intern.start} – {intern.end}</div>
       </div>
-      <div style={{ fontSize: 12, color: C.forestMid, fontWeight: 600, marginTop: 10 }}>View full profile →</div>
+
+      {/* Supervisor Report Quick Action */}
+      <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+        <button onClick={e => { e.stopPropagation(); onClick(); }} style={{ flex: 1, background: C.sage, border: `1px solid ${C.mint}`, borderRadius: 8, padding: "7px 0", cursor: "pointer", fontSize: 12, fontWeight: 600, color: C.forest, fontFamily: "inherit" }}>
+          View Profile
+        </button>
+        <button onClick={e => { e.stopPropagation(); onWriteReport(); }}
+          style={{ flex: 1, background: supervisorReport ? C.successBg : C.forest, color: supervisorReport ? C.success : "#fff", border: supervisorReport ? `1px solid ${C.success}44` : "none", borderRadius: 8, padding: "7px 0", cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: "inherit" }}>
+          {supervisorReport ? "✓ Edit Report" : "Write Report"}
+        </button>
+      </div>
     </div>
   );
 }
 
 // ─── Intern Detail ────────────────────────────────────────────────────────
-function InternDetail({ intern, reports }) {
-  const { sm,  } = useBreakpoint();
+function InternDetail({ intern, reports, supervisorReport, onWriteReport }) {
+  const { sm } = useBreakpoint();
   const internReports = reports.filter(r => r.internId === intern.id);
   const filed = internReports.filter(r => r.status === "submitted").length;
   const pending = internReports.filter(r => r.status === "pending").length;
@@ -398,9 +706,41 @@ function InternDetail({ intern, reports }) {
         </div>
       </div>
 
+      {/* ── SUPERVISOR REPORT SECTION ── */}
+      <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 16, padding: sm ? "14px" : "20px", marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: supervisorReport ? 14 : 0, flexWrap: "wrap", gap: 10 }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 15 }}>Supervisor's Evaluation Report</div>
+            <div style={{ color: C.muted, fontSize: 13, marginTop: 2 }}>
+              {supervisorReport ? `Last updated ${supervisorReport.createdAt}` : "No report written yet for this intern"}
+            </div>
+          </div>
+          <button onClick={onWriteReport}
+            style={{ background: supervisorReport ? C.sage : C.forest, color: supervisorReport ? C.forest : "#fff", border: supervisorReport ? `1px solid ${C.mint}` : "none", borderRadius: 10, padding: "9px 18px", cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: "inherit", whiteSpace: "nowrap" }}>
+            {supervisorReport ? "✏️ Edit Report" : "✍️ Write Report"}
+          </button>
+        </div>
+
+        {!supervisorReport && (
+          <div style={{ marginTop: 16, background: C.sage, borderRadius: 12, padding: "20px", textAlign: "center", border: `2px dashed ${C.border}` }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>✍️</div>
+            <div style={{ fontWeight: 700, fontSize: 14, color: C.text, marginBottom: 4 }}>No evaluation written yet</div>
+            <div style={{ fontSize: 13, color: C.muted, marginBottom: 14 }}>Write a supervisor report to evaluate this intern's performance, attendance, and conduct.</div>
+            <button onClick={onWriteReport}
+              style={{ background: C.forest, color: "#fff", border: "none", borderRadius: 10, padding: "10px 24px", cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: "inherit" }}>
+              Write Evaluation Report
+            </button>
+          </div>
+        )}
+
+        {supervisorReport && (
+          <SupervisorReportView report={supervisorReport} intern={intern} onEdit={onWriteReport} sm={sm} />
+        )}
+      </div>
+
       {/* Report history */}
       <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 16, padding: sm ? "14px" : "20px" }}>
-        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Report History</div>
+        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Intern's Report History</div>
         {internReports.length === 0 ? (
           <div style={{ textAlign: "center", padding: "28px 0", color: C.muted }}>
             <div style={{ fontSize: 28, marginBottom: 6 }}>📋</div>
@@ -514,6 +854,9 @@ export default function App() {
   const [page, setPage] = useState("dashboard");
   const [selectedIntern, setSelectedIntern] = useState(null);
   const [prevPage, setPrevPage] = useState(null);
+  // supervisorReports: { [internId]: reportObject }
+  const [supervisorReports, setSupervisorReports] = useState({});
+  const [reportModalIntern, setReportModalIntern] = useState(null);
 
   if (!supervisor) return <Onboarding onComplete={setSupervisor} />;
 
@@ -528,14 +871,56 @@ export default function App() {
     setPage("dashboard");
   };
 
+  const openReportModal = (intern) => setReportModalIntern(intern);
+  const closeReportModal = () => setReportModalIntern(null);
+
+  const saveReport = (reportData) => {
+    setSupervisorReports(prev => ({ ...prev, [reportData.internId]: reportData }));
+  };
+
   return (
     <div style={{ fontFamily: "'DM Sans','Segoe UI',sans-serif", background: C.sage, minHeight: "100vh", color: C.text, overflowX: "hidden" }}>
-      <Navbar supervisor={supervisor} page={page} onBack={goBack} onLogout={() => { setSupervisor(null); setPage("dashboard"); }} breadcrumb={page === "internDetail" ? { parent: "All Interns" } : null} />
-      {page === "dashboard"    && <Dashboard supervisor={supervisor} interns={INTERNS} reports={REPORTS} onNav={navigate} />}
-      {page === "interns"      && <InternsScreen interns={INTERNS} reports={REPORTS} onDetail={i => navigate("internDetail", i)} />}
-      {page === "submitted"    && <ReportsScreen reports={REPORTS} interns={INTERNS} filterStatus="submitted" />}
-      {page === "pending"      && <ReportsScreen reports={REPORTS} interns={INTERNS} filterStatus="pending" />}
-      {page === "internDetail" && selectedIntern && <InternDetail intern={selectedIntern} reports={REPORTS} />}
+      <Navbar page={page} onBack={goBack} onLogout={() => { setSupervisor(null); setPage("dashboard"); }} breadcrumb={page === "internDetail" ? { parent: "All Interns" } : null} />
+
+      {page === "dashboard" && (
+        <Dashboard
+          supervisor={supervisor}
+          interns={INTERNS}
+          reports={REPORTS}
+          supervisorReports={supervisorReports}
+          onNav={navigate}
+          onWriteReport={openReportModal}
+        />
+      )}
+      {page === "interns" && (
+        <InternsScreen
+          interns={INTERNS}
+          reports={REPORTS}
+          supervisorReports={supervisorReports}
+          onDetail={i => navigate("internDetail", i)}
+          onWriteReport={openReportModal}
+        />
+      )}
+      {page === "submitted" && <ReportsScreen reports={REPORTS} interns={INTERNS} filterStatus="submitted" />}
+      {page === "pending" && <ReportsScreen reports={REPORTS} interns={INTERNS} filterStatus="pending" />}
+      {page === "internDetail" && selectedIntern && (
+        <InternDetail
+          intern={selectedIntern}
+          reports={REPORTS}
+          supervisorReport={supervisorReports[selectedIntern.id]}
+          onWriteReport={() => openReportModal(selectedIntern)}
+        />
+      )}
+
+      {/* Supervisor Report Modal */}
+      {reportModalIntern && (
+        <SupervisorReportModal
+          intern={reportModalIntern}
+          existingReport={supervisorReports[reportModalIntern.id]}
+          onSave={saveReport}
+          onClose={closeReportModal}
+        />
+      )}
     </div>
   );
 }

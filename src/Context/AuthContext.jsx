@@ -31,14 +31,14 @@ export const AuthProvider = ({ children }) => {
         };
         setUser(mockUser);
         localStorage.setItem('ims_user', JSON.stringify(mockUser));
-        return true;
+        return mockUser;
     };
 
     const signup = (userData) => {
         // Mock signup logic
         setUser(userData);
         localStorage.setItem('ims_user', JSON.stringify(userData));
-        return true;
+        return userData;
     };
 
     const logout = () => {

@@ -12,10 +12,18 @@ const Signup = () => {
     const { signup } = useAuth();
     const navigate = useNavigate();
 
+    const roleRoutes = {
+        student: '/student',
+        admin: '/admin',
+        'academic-supervisor': '/academic-supervisor',
+        'workplace-supervisor': '/workplace-supervisor',
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         signup({ name, email, role });
-        navigate('/dashboard');
+        const destination = roleRoutes[role] || '/login';
+        navigate(destination);
     };
 
     return (

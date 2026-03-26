@@ -3,7 +3,7 @@ import { FiUser } from "react-icons/fi";
 import Navbar from '../Components/Navbar/Navbar'
 import { FaRegFileLines } from "react-icons/fa6";
 import { useNavigate } from 'react-router-dom';
-import './AcademicSupervisor.css'
+import './AcademicSupervisorDashboard.css'
 
 const AcademicSupervisorDashboard = () => {
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ const AcademicSupervisorDashboard = () => {
       <main className="asd-main">
         <div className="asd-container">
 
-          {/* Supervisor Information*/}
+          {/* ── Supervisor Info ── */}
           <div className="asd-info-card">
             <h2 className="asd-info-title">Supervisor Information</h2>
 

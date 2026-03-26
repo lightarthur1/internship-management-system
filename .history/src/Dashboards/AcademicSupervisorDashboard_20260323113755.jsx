@@ -15,7 +15,7 @@ const AcademicSupervisorDashboard = () => {
       <main className="asd-main">
         <div className="asd-container">
 
-          {/* Supervisor Information*/}
+          {/* ── Supervisor Info ── */}
           <div className="asd-info-card">
             <h2 className="asd-info-title">Supervisor Information</h2>
 

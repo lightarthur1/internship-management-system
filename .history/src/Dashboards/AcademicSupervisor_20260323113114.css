@@ -1,0 +1,273 @@
+/* ===== AcademicSupervisorDashboard Styles ===== */
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* ---- Page main wrapper ---- */
+.asd-main {
+  padding-top: 5rem; /* pt-20 */
+}
+
+/* ---- Centered container ---- */
+.asd-container {
+  max-width: 72rem; /* max-w-6xl */
+  margin: 0 auto;
+  margin-top: 2rem;
+}
+
+/* ---- Generic info / stat card base ---- */
+.asd-card {
+  background-color: #f3f4f6; /* gray-100 */
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb; /* gray-200 */
+}
+
+/* ---- Supervisor info card ---- */
+.asd-info-card {
+  
+  background-color: #f3f4f6;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+}
+
+.asd-info-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #000000;
+  margin: 0 0 1.5rem;
+}
+
+.asd-info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .asd-info-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.asd-info-label {
+  font-size: 0.875rem;
+  color: #6b7280; /* gray-500 */
+  margin: 0 0 0.25rem;
+}
+
+.asd-info-value {
+  font-weight: 400;
+  color: #111827; /* gray-900 */
+  margin: 0;
+}
+
+/* ---- Stats row (3 cards) ---- */
+.asd-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .asd-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.asd-stat-card {
+  background-color: #f3f4f6;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+}
+
+.asd-stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.asd-stat-label {
+  color: #6b7280;
+  font-size: 1rem;
+  font-weight: 400;
+  margin: 0;
+}
+
+.asd-stat-icon {
+  font-size: 1.125rem;
+  color: #6b7280;
+}
+
+.asd-stat-icon--orange {
+  font-size: 1.125rem;
+  color: #ea580c; /* orange-600 */
+}
+
+.asd-stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #000000;
+}
+
+.asd-stat-value--orange {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #ea580c;
+}
+
+/* ---- Assigned students section ---- */
+.asd-students-wrapper {
+  max-width: 72rem;
+  margin: 2rem auto 0;
+}
+
+.asd-students-card {
+  background-color: #f3f4f6;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+}
+
+.asd-students-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #000000;
+  margin: 0 0 0.25rem;
+}
+
+.asd-students-subtitle {
+  color: #6b7280;
+  font-size: 1rem;
+  margin: 0 0 1rem;
+}
+
+.asd-students-inner {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+/* ---- Individual student row card ---- */
+.asd-student-card {
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Student name + pending badge row */
+.asd-student-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.asd-student-name {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #000000;
+  margin: 0;
+}
+
+.asd-pending-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  border: 1px solid #fed7aa; /* orange-200 */
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #c2410c; /* orange-700 */
+  background: transparent;
+}
+
+/* Meta info (ID, department, company, location) */
+.asd-student-meta {
+  color: #6b7280;
+  font-size: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.asd-student-meta p {
+  margin: 0;
+}
+
+.asd-student-dot {
+  font-weight: 700;
+  color: #6b7280;
+}
+
+/* Bottom row: company + location + button */
+.asd-student-row {
+  display: flex;
+  gap: 2rem;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.asd-student-row p {
+  margin: 0;
+}
+
+.asd-student-company {
+  color: #000000;
+}
+
+/* View Reports button */
+.asd-view-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: #14532d; /* green-900 */
+  color: #ffffff;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  border: none;
+  font-size: 0.875rem;
+}
+
+.asd-view-btn button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0;
+}
+
+.asd-view-btn:hover {
+  background-color: #166534; /* green-800 */
+}
+
+/* Reports submitted line */
+.asd-reports-submitted {
+  color: #000000;
+  margin: 0;
+  font-size: 0.9rem;
+}

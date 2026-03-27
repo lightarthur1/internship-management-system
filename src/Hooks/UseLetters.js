@@ -1,40 +1,19 @@
-import { useState } from "react";
-
-const INITIAL_LETTERS = [
-  {
-    id: 1,
-    studentName: "John Doe",
-    studentId: "2024001",
-    department: "Computer Science",
-    company: "Tech Solutions Ltd",
-    location: "Lagos, Nigeria",
-    requestDate: "2/25/2026",
-    status: "pending",
-  },
-  {
-    id: 2,
-    studentName: "Jane Smith",
-    studentId: "2024002",
-    department: "Business Administration",
-    company: "Finance Group Inc",
-    location: "Abuja, Nigeria",
-    requestDate: "2/26/2026",
-    status: "pending",
-  },
-  {
-    id: 3,
-    studentName: "Michael Johnson",
-    studentId: "2024003",
-    department: "Engineering",
-    company: "Engineering Dynamics",
-    location: "Port Harcourt, Nigeria",
-    requestDate: "2/20/2026",
-    status: "approved",
-  },
-];
+import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import { useAuth } from "../Context/AuthContext";
 
 export default function useLetters() {
-  const [letters, setLetters] = useState(INITIAL_LETTERS);
+  const { token } = useAuth();
+  const api = useMemo(
+    () =>
+      axios.create({
+        baseURL: "http://localhost:5000/api",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      }),
+    [token]
+  );
+
+  const [letters, setLetters] = useState([]);
   const [previewLetter, setPreviewLetter] = useState(null);
   const [toast, setToast] = useState(null);
 
@@ -43,21 +22,58 @@ export default function useLetters() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await api.get("/letters/admin/all");
+        const items = (res?.data?.letters || []).map((l) => ({
+          id: l._id,
+          studentName: l?.student?.fullName || "Unknown Student",
+          studentId: l?.student?.profile?.studentId || "N/A",
+          department: l?.student?.profile?.department || "N/A",
+          company: l.company,
+          location: l.location,
+          requestDate: l.createdAt
+            ? new Date(l.createdAt).toLocaleDateString()
+            : "",
+          status: l.status,
+        }));
+        setLetters(items);
+      } catch (e) {
+        console.error("Failed to load letters", e);
+        showToast("Failed to load letters", "error");
+      }
+    };
+    load();
+  }, [api]);
+
   const pendingLetters = letters.filter((l) => l.status === "pending");
   const processedLetters = letters.filter((l) => l.status !== "pending");
 
-  const handleApprove = (id) => {
-    setLetters((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, status: "approved" } : l))
-    );
-    showToast("Letter approved successfully!");
+  const handleApprove = async (id) => {
+    try {
+      await api.patch(`/letters/admin/${id}/status`, { status: "approved" });
+      setLetters((prev) =>
+        prev.map((l) => (l.id === id ? { ...l, status: "approved" } : l))
+      );
+      showToast("Letter approved successfully!");
+    } catch (e) {
+      console.error("Approve failed", e);
+      showToast("Failed to approve letter", "error");
+    }
   };
 
-  const handleReject = (id) => {
-    setLetters((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, status: "rejected" } : l))
-    );
-    showToast("Letter rejected.", "error");
+  const handleReject = async (id) => {
+    try {
+      await api.patch(`/letters/admin/${id}/status`, { status: "rejected" });
+      setLetters((prev) =>
+        prev.map((l) => (l.id === id ? { ...l, status: "rejected" } : l))
+      );
+      showToast("Letter rejected.", "error");
+    } catch (e) {
+      console.error("Reject failed", e);
+      showToast("Failed to reject letter", "error");
+    }
   };
 
   const openPreview = (letter) => setPreviewLetter(letter);

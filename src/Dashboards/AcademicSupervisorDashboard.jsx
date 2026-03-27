@@ -1,36 +1,135 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { FiUser } from "react-icons/fi";
-import Navbar from '../Components/Navbar/Navbar'
 import { FaRegFileLines } from "react-icons/fa6";
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../Context/AuthContext';
+import axios from 'axios';
 import './AcademicSupervisor.css'
 
 const AcademicSupervisorDashboard = () => {
   const navigate = useNavigate();
+  const { user, token, logout } = useAuth();
+  const [profile, setProfile] = useState({ department: "", phone: "", title: "" });
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [isEditingDepartment, setIsEditingDepartment] = useState(false);
+
+  const handleLogout = () => {
+    logout?.();
+    navigate('/login');
+  };
+
+  useEffect(() => {
+    const load = async () => {
+      if (!token) {
+        setLoadingProfile(false);
+        return;
+      }
+      try {
+        const res = await axios.get("http://localhost:5000/api/users/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const p = res?.data?.user?.profile || {};
+        setProfile({
+          department: p.department || "",
+          phone: p.phone || "",
+          title: p.title || "",
+        });
+      } catch (e) {
+        console.error("Failed to load supervisor profile", e);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+    load();
+  }, [token]);
+
+  const saveDepartment = async () => {
+    try {
+      await axios.patch(
+        "http://localhost:5000/api/users/me/profile",
+        {
+          department: profile.department,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setIsEditingDepartment(false);
+    } catch (e) {
+      alert(e?.response?.data?.message || "Failed to save profile");
+    }
+  };
+
+  const supervisorName = user?.name || user?.fullName || "Academic Supervisor";
+  const supervisorEmail = user?.email || "No email";
+  const supervisorDepartment = profile.department || "Not set";
 
   return (
     <>
-      <Navbar />
+      <div style={{ background: "#0f172a", padding: "10px 16px", position: "sticky", top: 0, zIndex: 20 }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <p style={{ color: "#fff", fontWeight: 700, margin: 0 }}>Academic Supervisor Dashboard</p>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, margin: 0 }}>IMS Portal</p>
+          </div>
+          <button
+            onClick={handleLogout}
+            style={{
+              background: "rgba(255,255,255,0.1)",
+              color: "#fff",
+              border: "1px solid rgba(255,255,255,0.25)",
+              borderRadius: "8px",
+              padding: "8px 14px",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            Logout
+          </button>
+        </div>
+      </div>
 
       <main className="asd-main">
         <div className="asd-container">
-
           {/* Supervisor Information*/}
           <div className="asd-info-card">
-            <h2 className="asd-info-title">Supervisor Information</h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+              <h2 className="asd-info-title">Supervisor Information</h2>
+              <button
+                onClick={() => setIsEditingDepartment((v) => !v)}
+                style={{ background: "#0f172a", color: "#ffffff", border: "1px solid #0f172a", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontWeight: 600 }}
+              >
+                {isEditingDepartment ? "Cancel" : "Edit"}
+              </button>
+            </div>
 
             <div className="asd-info-grid">
               <div>
                 <p className="asd-info-label">Name</p>
-                <p className="asd-info-value">Dr. Sarah Williams</p>
+                <p className="asd-info-value">{supervisorName}</p>
               </div>
               <div>
                 <p className="asd-info-label">Department</p>
-                <p className="asd-info-value">Computer Science</p>
+                {isEditingDepartment ? (
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input
+                      value={profile.department}
+                      onChange={(e) => setProfile((p) => ({ ...p, department: e.target.value }))}
+                      placeholder="e.g. Computer Science"
+                      style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", color: "#0f172a", fontWeight: 600 }}
+                    />
+                    <button
+                      onClick={saveDepartment}
+                      style={{ background: "#0f172a", color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", cursor: "pointer", whiteSpace: "nowrap" }}
+                    >
+                      Save
+                    </button>
+                  </div>
+                ) : (
+                  <p className="asd-info-value">{loadingProfile ? "Loading..." : supervisorDepartment}</p>
+                )}
               </div>
               <div>
                 <p className="asd-info-label">Email</p>
-                <p className="asd-info-value">sarah.w@university.edu</p>
+                <p className="asd-info-value">{supervisorEmail}</p>
               </div>
             </div>
           </div>

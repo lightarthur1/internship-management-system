@@ -8,27 +8,46 @@ import '../Styles/Login.css'
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const { login, user } = useAuth();
+    const [submitting, setSubmitting] = useState(false);
+    const { login } = useAuth();
     const navigate = useNavigate();
-const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // 1. Capture the return value of login() directly
-    const loggedInUser = login(email, password); 
-    
-    // 2. Use the returned user object, which is guaranteed to be up-to-date
-    if (loggedInUser) {
-        switch(loggedInUser.role) {
-            case 'admin': navigate('/admin'); break;
-            case 'academic-supervisor': navigate('/academic-supervisor'); break;
-            case 'workplace-supervisor': navigate('/workplace-supervisor'); break;
-            case 'student': navigate('/student'); break;
-            default: navigate('/login');
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+
+        try {
+            const loggedInUser = await login(email, password);
+
+            if (loggedInUser) {
+                switch (loggedInUser.role) {
+                    case 'admin':
+                        navigate('/admin');
+                        break;
+                    case 'academic-supervisor':
+                        navigate('/academic-supervisor');
+                        break;
+                    case 'workplace-supervisor':
+                        navigate('/workplace-supervisor');
+                        break;
+                    case 'student':
+                        navigate('/student');
+                        break;
+                    default:
+                        navigate('/login');
+                }
+            } else {
+                alert("Invalid email or password");
+            }
+        } catch (error) {
+            const message =
+                error?.response?.data?.message ||
+                "Login failed. Please check your credentials.";
+            alert(message);
+        } finally {
+            setSubmitting(false);
         }
-    } else {
-        alert("Invalid email or password");
-    }
-};
+    };
 
     return (
         <div className="auth-page">
@@ -83,8 +102,8 @@ const handleSubmit = async (e) => {
                         <a href="#" className="forgot-password">Forgot password?</a>
                     </div>
 
-                    <button type="submit"  className="w-full">
-                        Sign In <ArrowRight size={18} />
+                    <button type="submit" className="w-full" disabled={submitting}>
+                        {submitting ? 'Signing In...' : 'Sign In'} <ArrowRight size={18} />
                     </button>
                 </form>
 

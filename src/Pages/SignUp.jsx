@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from "../Context/AuthContext";
-import { Layout, Mail, Lock, User, Briefcase, GraduationCap, ShieldCheck, Users } from 'lucide-react';
+import { Layout, Mail, Lock, User, Briefcase, GraduationCap, Users } from 'lucide-react';
 import '../Styles/SignUp.css'
 
 const Signup = () => {
@@ -9,21 +9,32 @@ const Signup = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [submitting, setSubmitting] = useState(false);
     const { signup } = useAuth();
     const navigate = useNavigate();
 
     const roleRoutes = {
         student: '/student',
-        admin: '/admin',
         'academic-supervisor': '/academic-supervisor',
         'workplace-supervisor': '/workplace-supervisor',
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        signup({ name, email, role });
-        const destination = roleRoutes[role] || '/login';
-        navigate(destination);
+        setSubmitting(true);
+
+        try {
+            await signup({ name, email, password, role });
+            const destination = roleRoutes[role] || '/login';
+            navigate(destination);
+        } catch (error) {
+            const message =
+                error?.response?.data?.message ||
+                "Signup failed. Please check your details.";
+            alert(message);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -62,14 +73,6 @@ const Signup = () => {
                         >
                             <Users size={20} />
                             <span>Workplace Supervisor</span>
-                        </button>
-
-                        <button
-                            className={`role-btn ${role === 'admin' ? 'active' : ''}`}
-                            onClick={() => setRole('admin')}
-                        >
-                            <ShieldCheck size={20} />
-                            <span>Admin</span>
                         </button>
                     </div>
                 </div>
@@ -118,8 +121,8 @@ const Signup = () => {
                         </div>
                     </div>
 
-                    <button type="submit"className="w-full">
-                        Create Account
+                    <button type="submit" className="w-full" disabled={submitting}>
+                        {submitting ? 'Creating Account...' : 'Create Account'}
                     </button>
                 </form>
 

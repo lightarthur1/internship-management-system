@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
+import axios from "axios";
 import {
   Briefcase, FileText, Clock, Download, LogOut, CheckCircle,
   ChevronRight, ArrowLeft, Search, MapPin, Calendar, Upload,
@@ -471,11 +472,17 @@ const ProfileWizard = ({ user, onComplete }) => {
 /* ════════════════════════════════════════════════════════════════════
    HOME PAGE
 ════════════════════════════════════════════════════════════════════ */
-const HomePage = ({ user, profile, onNavigate, internshipStarted, setInternshipStarted, reports, appliedCount, showToast }) => {
+const HomePage = ({ user, profile, onNavigate, internshipStarted, onToggleInternshipStart, onSaveStudentProfile, reports, appliedCount, showToast }) => {
   const submitted  = reports.filter(r => r.status !== "draft").length;
   const approved   = reports.filter(r => r.status === "approved").length;
   const pending    = reports.filter(r => r.status === "pending").length;
   const initials   = (user?.name || "ST").split(" ").map(w => w[0]).slice(0,2).join("").toUpperCase();
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(profile);
+
+  useEffect(() => {
+    setDraft(profile);
+  }, [profile]);
 
   return (
     <div className="fade-in">
@@ -504,23 +511,70 @@ const HomePage = ({ user, profile, onNavigate, internshipStarted, setInternshipS
         <div className="card-body">
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
             <p className="card-title" style={{ margin:0 }}>Student Information</p>
-            <button className="btn-ic" title="Edit"><Ic icon={Edit3} size={14} color="#6b7280" /></button>
+            <button
+              className="btn-ic"
+              title="Edit"
+              onClick={() => setIsEditing((v) => !v)}
+            >
+              <Ic icon={Edit3} size={14} color="#6b7280" />
+            </button>
           </div>
-          <div className="info-grid">
-            {[
-              ["Student ID",  profile.studentId ],
-              ["Department",  profile.dept      ],
-              ["Level",       profile.level     ],
-              ["Phone",       profile.phone     ],
-              ["Email",       user?.email       ],
-              ["Supervisor",  profile.supervisor],
-            ].map(([l, v]) => (
-              <div key={l}>
-                <p className="info-label">{l}</p>
-                <p className={`info-value${!v ? " empty" : ""}`}>{v || "Not set"}</p>
+          {isEditing ? (
+            <>
+              <div className="frow">
+                <div className="fg">
+                  <label className="fl">Student ID</label>
+                  <input className="fi" value={draft.studentId || ""} onChange={(e) => setDraft((p) => ({ ...p, studentId: e.target.value }))} />
+                </div>
+                <div className="fg">
+                  <label className="fl">Department</label>
+                  <input className="fi" value={draft.dept || ""} onChange={(e) => setDraft((p) => ({ ...p, dept: e.target.value }))} />
+                </div>
               </div>
-            ))}
-          </div>
+              <div className="frow">
+                <div className="fg">
+                  <label className="fl">Level</label>
+                  <input className="fi" value={draft.level || ""} onChange={(e) => setDraft((p) => ({ ...p, level: e.target.value }))} />
+                </div>
+                <div className="fg">
+                  <label className="fl">Phone</label>
+                  <input className="fi" value={draft.phone || ""} onChange={(e) => setDraft((p) => ({ ...p, phone: e.target.value }))} />
+                </div>
+              </div>
+              <div className="fg">
+                <label className="fl">Academic Supervisor Name (optional)</label>
+                <input className="fi" value={draft.supervisor || ""} onChange={(e) => setDraft((p) => ({ ...p, supervisor: e.target.value }))} />
+              </div>
+              <div style={{ display:"flex", gap:10 }}>
+                <button className="btn-g" onClick={() => { setDraft(profile); setIsEditing(false); }}>Cancel</button>
+                <button
+                  className="btn-p"
+                  onClick={async () => {
+                    const ok = await onSaveStudentProfile(draft);
+                    if (ok) setIsEditing(false);
+                  }}
+                >
+                  Save Changes
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="info-grid">
+              {[
+                ["Student ID",  profile.studentId ],
+                ["Department",  profile.dept      ],
+                ["Level",       profile.level     ],
+                ["Phone",       profile.phone     ],
+                ["Email",       user?.email       ],
+                ["Supervisor",  profile.supervisor],
+              ].map(([l, v]) => (
+                <div key={l}>
+                  <p className="info-label">{l}</p>
+                  <p className={`info-value${!v ? " empty" : ""}`}>{v || "Not set"}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -590,7 +644,7 @@ const HomePage = ({ user, profile, onNavigate, internshipStarted, setInternshipS
           <p style={{ fontSize:14, color:"#6b7280", marginBottom:16 }}>Have you started your internship or been called to start?</p>
           <div style={{ display:"flex", alignItems:"center", gap:14 }}>
             <button
-              onClick={() => { setInternshipStarted(s => !s); showToast(internshipStarted ? "Status updated." : "Internship marked as started! 🎉"); }}
+              onClick={onToggleInternshipStart}
               style={{ width:46, height:26, borderRadius:99, background:internshipStarted?"#15653a":"#d1d5db", position:"relative", border:"none", cursor:"pointer", transition:"background .2s", flexShrink:0 }}>
               <span style={{ position:"absolute", width:20, height:20, borderRadius:"50%", background:"#fff", top:3, left:internshipStarted?23:3, transition:"left .2s", boxShadow:"0 1px 3px rgba(0,0,0,.2)" }} />
             </button>
@@ -613,32 +667,90 @@ const HomePage = ({ user, profile, onNavigate, internshipStarted, setInternshipS
    OPPORTUNITIES  –  3-column card grid (matches screenshot)
 ════════════════════════════════════════════════════════════════════ */
 
-/* Company data for the card grid */
-const COMPANIES = [
-  { id:1, name:"Tech Solutions Ltd",     loc:"Lagos, Nigeria",      emoji:"🏢", desc:"Looking for software development interns to work on web applications",              positions:5, dur:"6 months", roles:["Software Eng","Frontend Dev","Backend Dev"],       skills:["React","Node.js","Python"]       },
-  { id:2, name:"Digital Marketing Pro",  loc:"Abuja, Nigeria",      emoji:"📱", desc:"Marketing and social media management internship opportunity",                       positions:3, dur:"4 months", roles:["Marketing Intern","Social Media","Content Writer"], skills:["Canva","Meta Ads","Analytics"]   },
-  { id:3, name:"Finance Group Inc",      loc:"Port Harcourt, Nigeria",emoji:"💼", desc:"Accounting and finance internship for business students",                          positions:4, dur:"5 months", roles:["Finance Intern","Audit Intern","Tax Analyst"],      skills:["Excel","QuickBooks","IFRS"]      },
-  { id:4, name:"Engineering Dynamics",   loc:"Ibadan, Nigeria",     emoji:"⚙️", desc:"Mechanical and electrical engineering internship program",                           positions:6, dur:"6 months", roles:["Mechanical Eng","Electrical Eng","CAD Designer"],   skills:["AutoCAD","MATLAB","SolidWorks"]  },
-  { id:5, name:"Health Innovations Ltd", loc:"Lagos, Nigeria",      emoji:"🏥", desc:"Healthcare management and research internship positions available",                  positions:2, dur:"3 months", roles:["Research Intern","Admin Intern"],                   skills:["MS Office","Research","Data"]    },
-  { id:6, name:"AgriTech Nigeria",       loc:"Kano, Nigeria",       emoji:"🌱", desc:"Agricultural technology and farm management internship for science students",        positions:4, dur:"4 months", roles:["AgriTech Intern","Field Researcher"],               skills:["GIS","Data Analysis","Botany"]   },
-];
-
 const OppsPage = ({ onNavigate, applied, setApplied, showToast }) => {
   const [search, setSearch] = useState("");
   const [modal,  setModal]  = useState(null);
   const [reqModal, setReqModal] = useState(null);
+  const [companies, setCompanies] = useState([]);
+  const [loadingOpps, setLoadingOpps] = useState(true);
 
-  const filtered = COMPANIES.filter(c => {
+  useEffect(() => {
+    const load = async () => {
+      setLoadingOpps(true);
+      try {
+        const res = await axios.get("http://localhost:5000/api/opportunities?active=true");
+        const items = res?.data?.opportunities || [];
+        setCompanies(
+          items.map((o) => ({
+            id: o._id,
+            name: o.company,
+            loc: o.location,
+            emoji: "🏢",
+            desc: o.description,
+            positions: o.positions,
+            dur: o.duration,
+            roles: [],
+            skills: [],
+          }))
+        );
+      } catch (e) {
+        console.error("Failed to load opportunities", e);
+        showToast("Failed to load opportunities", "error");
+      } finally {
+        setLoadingOpps(false);
+      }
+    };
+    load();
+  }, [showToast]);
+
+  useEffect(() => {
+    const loadMyRequests = async () => {
+      const token = localStorage.getItem("ims_token");
+      if (!token) return;
+      try {
+        const res = await axios.get("http://localhost:5000/api/letters/mine", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const requestedIds = (res?.data?.letters || [])
+          .filter((l) => l.status === "pending" || l.status === "approved")
+          .map((l) => l?.opportunity?._id)
+          .filter(Boolean);
+        setApplied(requestedIds);
+      } catch (e) {
+        console.error("Failed to load my letter requests", e);
+      }
+    };
+    loadMyRequests();
+  }, [setApplied]);
+
+  const filtered = companies.filter(c => {
     const q = search.toLowerCase();
     return !q || c.name.toLowerCase().includes(q) || c.loc.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q);
   });
 
   const isApp = id => applied.includes(id);
 
-  const handleRequest = (c) => {
+  const handleRequest = async (c) => {
     setReqModal(null);
-    setApplied(a => [...a, c.id]);
-    showToast(`Internship letter requested from ${c.name}!`);
+    const token = localStorage.getItem("ims_token");
+    if (!token) {
+      showToast("Please login again.", "error");
+      return;
+    }
+
+    try {
+      await axios.post(
+        "http://localhost:5000/api/letters/request",
+        { opportunityId: c.id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setApplied((a) => [...new Set([...a, c.id])]);
+      showToast(`Internship letter requested from ${c.name}!`);
+    } catch (e) {
+      const message =
+        e?.response?.data?.message || "Could not request internship letter";
+      showToast(message, "error");
+    }
   };
 
   return (
@@ -664,7 +776,9 @@ const OppsPage = ({ onNavigate, applied, setApplied, showToast }) => {
       </div>
 
       {/* Card grid — 3 columns matching screenshot */}
-      {filtered.length === 0
+      {loadingOpps
+        ? <div className="empty"><Ic icon={Briefcase} size={28} color="#9ca3af" /><p style={{ marginTop:12, fontWeight:700, color:"#374151" }}>Loading opportunities...</p></div>
+        : filtered.length === 0
         ? <div className="empty"><Ic icon={Briefcase} size={28} color="#9ca3af" /><p style={{ marginTop:12, fontWeight:700, color:"#374151" }}>No companies found</p></div>
         : (
           <div className="opp-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:20 }}>
@@ -820,20 +934,79 @@ const INIT_PREV_REPORTS = [
   { id:3, date:"2026-02-28", type:"weekly", summary:"Working on database integration and API endpoints.", status:"pending", feedback:"" },
 ];
 
-const ReportsPage = ({ onNavigate, showToast }) => {
+const ReportsPage = ({ onNavigate, showToast, token }) => {
   const [reportType, setReportType] = useState("Weekly Report");
   const [content,    setContent]    = useState("");
-  const [prevReports, setPrevReports] = useState(INIT_PREV_REPORTS);
+  const [prevReports, setPrevReports] = useState([]);
+  const [workplaceReports, setWorkplaceReports] = useState([]);
 
-  const handleSubmit = () => {
+  useEffect(() => {
+    const load = async () => {
+      if (!token) return;
+      try {
+        const [logsRes, workplaceRes] = await Promise.all([
+          axios.get("http://localhost:5000/api/student/me/logs", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get("http://localhost:5000/api/student/me/workplace-reports", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        const logs = (logsRes?.data?.logs || []).map((l) => ({
+          id: l._id,
+          date: l.createdAt ? new Date(l.createdAt).toISOString().slice(0, 10) : "",
+          type: l.periodType,
+          summary: l.content,
+          status: l.status,
+          feedback: l.feedback || "",
+        }));
+        setPrevReports(logs.length > 0 ? logs : INIT_PREV_REPORTS);
+        setWorkplaceReports(workplaceRes?.data?.reports || []);
+      } catch (e) {
+        console.error("Failed to load reports", e);
+      }
+    };
+    load();
+  }, [token]);
+
+  const mapPeriodType = (displayType) => {
+    const t = displayType.toLowerCase();
+    if (t.includes("daily")) return "daily";
+    if (t.includes("monthly")) return "monthly";
+    return "weekly";
+  };
+
+  const handleSubmit = async () => {
     if (!content.trim()) { showToast("Please describe your activities before submitting.", "error"); return; }
-    const today = new Date().toISOString().slice(0,10);
-    setPrevReports(prev => [
-      { id: Date.now(), date: today, type: reportType.split(" ")[0].toLowerCase(), summary: content.trim(), status:"pending", feedback:"" },
-      ...prev,
-    ]);
-    setContent("");
-    showToast("Report submitted successfully!");
+    if (!token) {
+      showToast("Please login again.", "error");
+      return;
+    }
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/student/me/logs",
+        { periodType: mapPeriodType(reportType), content: content.trim() },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const l = res?.data?.log;
+      const today = new Date().toISOString().slice(0,10);
+      setPrevReports(prev => [
+        {
+          id: l?._id || Date.now(),
+          date: l?.createdAt ? new Date(l.createdAt).toISOString().slice(0, 10) : today,
+          type: l?.periodType || mapPeriodType(reportType),
+          summary: l?.content || content.trim(),
+          status: l?.status || "pending",
+          feedback: l?.feedback || "",
+        },
+        ...prev,
+      ]);
+      setContent("");
+      showToast("Report submitted successfully!");
+    } catch (e) {
+      showToast(e?.response?.data?.message || "Failed to submit report", "error");
+    }
   };
 
   const statusStyle = s => s === "reviewed"
@@ -937,6 +1110,29 @@ const ReportsPage = ({ onNavigate, showToast }) => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Workplace Supervisor Reports */}
+      <div style={{ marginTop: 20, background:"#fff", border:"1px solid #e5e7eb", borderRadius:12, padding:"20px" }}>
+        <p style={{ fontSize:17, fontWeight:700, color:"#111827", marginBottom:4 }}>Workplace Supervisor Reports</p>
+        <p style={{ fontSize:13, color:"#6b7280", marginBottom:16 }}>Reports submitted by your workplace supervisor</p>
+        {workplaceReports.length === 0 ? (
+          <p style={{ fontSize:13, color:"#9ca3af" }}>No workplace supervisor reports yet.</p>
+        ) : (
+          <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+            {workplaceReports.map((r) => (
+              <div key={r._id} style={{ border:"1px solid #e5e7eb", borderRadius:10, padding:"12px 14px" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", gap:10, marginBottom:6 }}>
+                  <p style={{ fontSize:13, fontWeight:700, color:"#111827" }}>{r.period}</p>
+                  <span style={{ fontSize:12, color:"#6b7280" }}>
+                    {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : ""}
+                  </span>
+                </div>
+                <p style={{ fontSize:13, color:"#374151", lineHeight:1.6 }}>{r.summary}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1058,13 +1254,14 @@ const StatusPage = ({ onNavigate, internshipStarted, profile, user, reports, sho
    ROOT
 ════════════════════════════════════════════════════════════════════ */
 export default function StudentDashboard() {
-  const { user, logout }         = useAuth();
+  const { user, token, logout }  = useAuth();
   const navigate                 = useNavigate();
   const [page,    setPage]       = useState("home");
   const [profile, setProfile]    = useState(null);
   const [started, setStarted]    = useState(false);
   const [reports]                = useState(INIT_REPORTS);
   const [applied, setApplied]    = useState([]);
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
   // Single global toast — lives here so it always renders ABOVE the navbar
   const [gToast, showToast]      = useToast();
@@ -1072,6 +1269,132 @@ export default function StudentDashboard() {
   const handleLogout = () => { logout?.(); navigate("/login"); };
   const displayName = user?.name || "Student";
   const initials    = displayName.split(" ").map(w => w[0]).slice(0,2).join("").toUpperCase();
+
+  useEffect(() => {
+    const load = async () => {
+      if (!token) {
+        setLoadingProfile(false);
+        return;
+      }
+      try {
+        const res = await axios.get("http://localhost:5000/api/users/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const p = res?.data?.user?.profile;
+        if (p && Object.keys(p).length > 0) {
+          setStarted(p.internshipStatus === "active");
+          setProfile({
+            studentId: p.studentId || "",
+            dept: p.department || "",
+            level: p.level || "",
+            phone: p.phone || "",
+            state: p.stateOfOrigin || "",
+            supervisor: p.preferredAcademicSupervisorName || "",
+          });
+        }
+      } catch (e) {
+        // If profile can't load, fall back to wizard
+        console.error("Failed to load profile", e);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+    load();
+  }, [token]);
+
+  const handleProfileComplete = async (wizardProfile) => {
+    // Persist to backend so it survives refresh/login
+    try {
+      if (token) {
+        const res = await axios.patch(
+          "http://localhost:5000/api/users/me/profile",
+          {
+            studentId: wizardProfile.studentId,
+            department: wizardProfile.dept,
+            level: wizardProfile.level,
+            phone: wizardProfile.phone,
+            stateOfOrigin: wizardProfile.state,
+            preferredAcademicSupervisorName: wizardProfile.supervisor,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const p = res?.data?.user?.profile || {};
+        setProfile({
+          studentId: p.studentId || "",
+          dept: p.department || "",
+          level: p.level || "",
+          phone: p.phone || "",
+          state: p.stateOfOrigin || "",
+          supervisor: p.preferredAcademicSupervisorName || "",
+        });
+        return;
+      }
+    } catch (e) {
+      console.error("Failed to save profile", e);
+      showToast("Could not save profile. Please try again.", "error");
+      return;
+    }
+
+    // Fallback (shouldn't happen): keep in memory
+    setProfile(wizardProfile);
+  };
+
+  const handleToggleInternshipStart = async () => {
+    if (started) {
+      showToast("Internship is already active.");
+      return;
+    }
+    const workplaceSupervisorName = window.prompt("Enter workplace supervisor full name:");
+    if (!workplaceSupervisorName) return;
+    const workplaceSupervisorEmail = window.prompt("Enter workplace supervisor email:");
+    if (!workplaceSupervisorEmail) return;
+    const workplaceSupervisorPhone = window.prompt("Enter workplace supervisor phone (optional):") || "";
+
+    try {
+      await axios.patch(
+        "http://localhost:5000/api/student/me/internship/start",
+        { workplaceSupervisorName, workplaceSupervisorEmail, workplaceSupervisorPhone },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setStarted(true);
+      showToast("Internship marked as started! 🎉");
+    } catch (e) {
+      showToast(e?.response?.data?.message || "Failed to start internship", "error");
+    }
+  };
+
+  const handleSaveStudentProfile = async (nextProfile) => {
+    if (!nextProfile) return false;
+    try {
+      const res = await axios.patch(
+        "http://localhost:5000/api/users/me/profile",
+        {
+          studentId: nextProfile.studentId || "",
+          department: nextProfile.dept || "",
+          level: nextProfile.level || "",
+          phone: nextProfile.phone || "",
+          preferredAcademicSupervisorName: nextProfile.supervisor || "",
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const p = res?.data?.user?.profile || {};
+      setProfile({
+        studentId: p.studentId || "",
+        dept: p.department || "",
+        level: p.level || "",
+        phone: p.phone || "",
+        state: p.stateOfOrigin || "",
+        supervisor: p.preferredAcademicSupervisorName || "",
+      });
+      showToast("Student profile updated.");
+      return true;
+    } catch (e) {
+      showToast(e?.response?.data?.message || "Failed to update profile", "error");
+      return false;
+    }
+  };
 
   return (
     <>
@@ -1082,7 +1405,7 @@ export default function StudentDashboard() {
         {gToast && <ToastEl key={gToast.key} msg={gToast.msg} type={gToast.type} />}
 
         {/* Profile wizard */}
-        {!profile && <ProfileWizard user={user} onComplete={setProfile} />}
+        {!profile && !loadingProfile && <ProfileWizard user={user} onComplete={handleProfileComplete} />}
 
         {/* Navbar */}
         <nav className="topnav">
@@ -1108,9 +1431,9 @@ export default function StudentDashboard() {
 
         {/* Pages — each receives showToast, no local toast state */}
         <div className="page-wrap">
-          {profile && page === "home"    && <HomePage    user={user} profile={profile} onNavigate={setPage} internshipStarted={started} setInternshipStarted={setStarted} reports={reports} appliedCount={applied.length} showToast={showToast} />}
+          {profile && page === "home"    && <HomePage    user={user} profile={profile} onNavigate={setPage} internshipStarted={started} onToggleInternshipStart={handleToggleInternshipStart} onSaveStudentProfile={handleSaveStudentProfile} reports={reports} appliedCount={applied.length} showToast={showToast} />}
           {profile && page === "opps"    && <OppsPage    onNavigate={setPage} applied={applied} setApplied={setApplied} showToast={showToast} />}
-          {profile && page === "reports" && <ReportsPage onNavigate={setPage} showToast={showToast} />}
+          {profile && page === "reports" && <ReportsPage onNavigate={setPage} showToast={showToast} token={token} />}
           {profile && page === "status"  && <StatusPage  onNavigate={setPage} internshipStarted={started} profile={profile} user={user} reports={reports} showToast={showToast} />}
         </div>
       </div>

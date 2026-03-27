@@ -1,70 +1,20 @@
-import { useState } from "react";
-
-const INITIAL_SUPERVISORS = [
-  {
-    id: 1,
-    name: "Dr. Sarah Williams",
-    department: "Computer Science",
-    email: "sarah.w@university.edu",
-  },
-  {
-    id: 2,
-    name: "Prof. James Brown",
-    department: "Business Administration",
-    email: "james.b@university.edu",
-  },
-  {
-    id: 3,
-    name: "Dr. Emily Davis",
-    department: "Engineering",
-    email: "emily.d@university.edu",
-  },
-  {
-    id: 4,
-    name: "Dr. Michael Chen",
-    department: "Computer Science",
-    email: "michael.c@university.edu",
-  },
-];
-
-const INITIAL_STUDENTS = [
-  {
-    id: 1,
-    name: "John Doe",
-    studentId: "2024001",
-    department: "Computer Science",
-    company: "Tech Solutions Ltd",
-    supervisorId: 1, // pre-assigned
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    studentId: "2024002",
-    department: "Business Administration",
-    company: "Finance Group Inc",
-    supervisorId: null,
-  },
-  {
-    id: 3,
-    name: "Michael Johnson",
-    studentId: "2024003",
-    department: "Engineering",
-    company: "Engineering Dynamics",
-    supervisorId: null,
-  },
-  {
-    id: 4,
-    name: "Emily Brown",
-    studentId: "2024004",
-    department: "Computer Science",
-    company: "Digital Marketing Pro",
-    supervisorId: 4, // pre-assigned
-  },
-];
+import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import { useAuth } from "../Context/AuthContext";
 
 export default function useSupervisors() {
-  const [supervisors] = useState(INITIAL_SUPERVISORS);
-  const [students, setStudents] = useState(INITIAL_STUDENTS);
+  const { token } = useAuth();
+  const api = useMemo(
+    () =>
+      axios.create({
+        baseURL: "http://localhost:5000/api",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      }),
+    [token]
+  );
+
+  const [supervisors, setSupervisors] = useState([]);
+  const [students, setStudents] = useState([]);
   const [toast, setToast] = useState(null);
 
   const showToast = (message, type = "success") => {
@@ -72,14 +22,54 @@ export default function useSupervisors() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const assignSupervisor = (studentId, supervisorId) => {
-    const supervisor = supervisors.find((s) => s.id === supervisorId);
-    setStudents((prev) =>
-      prev.map((s) =>
-        s.id === studentId ? { ...s, supervisorId } : s
-      )
-    );
-    showToast(`Supervisor assigned: ${supervisor.name}`);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [supRes, stuRes] = await Promise.all([
+          api.get("/admin/academic-supervisors"),
+          api.get("/admin/students"),
+        ]);
+
+        const supMapped = (supRes?.data?.supervisors || []).map((s) => ({
+          id: s._id,
+          name: s.fullName,
+          department: s?.profile?.department || "N/A",
+          email: s.email,
+        }));
+
+        const stuMapped = (stuRes?.data?.students || []).map((s) => ({
+          id: s._id,
+          name: s.fullName,
+          studentId: s?.profile?.studentId || "N/A",
+          department: s?.profile?.department || "N/A",
+          company: "Not set",
+          supervisorId: s?.profile?.academicSupervisorId?._id || null,
+        }));
+
+        setSupervisors(supMapped);
+        setStudents(stuMapped);
+      } catch (e) {
+        console.error("Failed to load supervisor assignment data", e);
+        showToast("Failed to load supervisors/students", "error");
+      }
+    };
+    if (token) load();
+  }, [api, token]);
+
+  const assignSupervisor = async (studentId, supervisorId) => {
+    try {
+      await api.patch(`/admin/students/${studentId}/academic-supervisor`, {
+        academicSupervisorId: supervisorId,
+      });
+      const supervisor = supervisors.find((s) => s.id === supervisorId);
+      setStudents((prev) =>
+        prev.map((s) => (s.id === studentId ? { ...s, supervisorId } : s))
+      );
+      showToast(`Supervisor assigned: ${supervisor?.name || "Updated"}`);
+    } catch (e) {
+      console.error("Assign supervisor failed", e);
+      showToast("Failed to assign supervisor", "error");
+    }
   };
 
   // Compute student count per supervisor dynamically

@@ -17,6 +17,7 @@ const ManageOpportunities = () => {
     form,
     setForm,
     toast,
+    loading,
     showAddModal,
     editTargetId,
     deleteTargetId,
@@ -52,7 +53,12 @@ const ManageOpportunities = () => {
       </div>
 
       <div className="opportunity-grid">
-        {opportunities.length === 0 ? (
+        {loading ? (
+          <div className="empty-state">
+            <p className="empty-title">Loading opportunities...</p>
+            <p className="empty-hint">Please wait</p>
+          </div>
+        ) : opportunities.length === 0 ? (
           <div className="empty-state">
             <p className="empty-title">No opportunities yet</p>
             <p className="empty-hint">Click "Add Opportunity" to get started</p>

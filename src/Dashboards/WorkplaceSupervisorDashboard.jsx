@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../Context/AuthContext";
+import axios from "axios";
 
 // ─── Design Tokens ────────────────────────────────────────────────────────
 const C = {
@@ -327,9 +330,9 @@ function SupervisorReportView({ report, intern, onEdit, sm }) {
 }
 
 // ─── Onboarding ───────────────────────────────────────────────────────────
-function Onboarding({ onComplete }) {
+function Onboarding({ onComplete, initialEmail = "" }) {
   const { sm } = useBreakpoint();
-  const [form, setForm] = useState({ company: "", email: "" });
+  const [form, setForm] = useState({ company: "", email: initialEmail, phone: "" });
   const [errors, setErrors] = useState({});
 
   const submit = () => {
@@ -337,7 +340,7 @@ function Onboarding({ onComplete }) {
     if (!form.company.trim()) e.company = "Required";
     if (!form.email.trim() || !form.email.includes("@")) e.email = "Valid email required";
     if (Object.keys(e).length) { setErrors(e); return; }
-    onComplete({ name: "Supervisor", company: form.company, email: form.email });
+    onComplete({ company: form.company, email: form.email, phone: form.phone });
   };
 
   return (
@@ -355,6 +358,7 @@ function Onboarding({ onComplete }) {
         {[
           { k: "company", label: "Company Name", placeholder: "Tech Solutions Ltd", type: "text" },
           { k: "email", label: "Work Email", placeholder: "you@company.com", type: "email" },
+          { k: "phone", label: "Phone (optional)", placeholder: "020 123 4567", type: "text" },
         ].map(({ k, label, placeholder, type }) => (
           <div key={k} style={{ marginBottom: 18 }}>
             <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 6 }}>{label}</label>
@@ -429,10 +433,12 @@ function StatCard({ label, value, icon, accent, sub, onClick }) {
 }
 
 // ─── Dashboard ────────────────────────────────────────────────────────────
-function Dashboard({ supervisor, interns, reports, supervisorReports, onNav, onWriteReport }) {
+function Dashboard({ supervisor, interns, reports, supervisorReports, onNav, onWriteReport, onUpdateCompany }) {
   const { sm, md } = useBreakpoint();
   const submitted = reports.filter(r => r.status === "submitted").length;
   const pending = reports.filter(r => r.status === "pending").length;
+  const [editingCompany, setEditingCompany] = useState(false);
+  const [companyDraft, setCompanyDraft] = useState(supervisor.company || "");
 
   return (
     <div style={{ maxWidth: 1060, margin: "0 auto", padding: sm ? "14px 12px" : "28px 20px", boxSizing: "border-box" }}>
@@ -444,7 +450,41 @@ function Dashboard({ supervisor, interns, reports, supervisorReports, onNav, onW
           <Avatar name={supervisor.name} size={sm ? 42 : 52} bg="rgba(255,255,255,0.15)" />
           <div style={{ minWidth: 0 }}>
             <div style={{ fontWeight: 800, fontSize: sm ? 17 : 21, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{supervisor.name}</div>
-            <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{supervisor.company}</div>
+            {editingCompany ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                <input
+                  value={companyDraft}
+                  onChange={(e) => setCompanyDraft(e.target.value)}
+                  style={{ padding: "6px 8px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.18)", color: "#fff", width: 220, maxWidth: "70vw" }}
+                />
+                <button
+                  onClick={async () => {
+                    const ok = await onUpdateCompany(companyDraft);
+                    if (ok) setEditingCompany(false);
+                  }}
+                  style={{ border: "none", background: "#fff", color: C.forest, borderRadius: 8, padding: "6px 10px", fontWeight: 700, cursor: "pointer" }}
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => {
+                    setCompanyDraft(supervisor.company || "");
+                    setEditingCompany(false);
+                  }}
+                  style={{ border: "1px solid rgba(255,255,255,0.4)", background: "transparent", color: "#fff", borderRadius: 8, padding: "6px 10px", fontWeight: 600, cursor: "pointer" }}
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div
+                onClick={() => setEditingCompany(true)}
+                title="Click to edit company"
+                style={{ color: "rgba(255,255,255,0.88)", fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: "pointer", textDecoration: "underline", textDecorationStyle: "dotted" }}
+              >
+                {supervisor.company}
+              </div>
+            )}
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: sm ? "1fr" : "1fr 1fr", gap: 10 }}>
@@ -850,7 +890,10 @@ const REPORTS = [
 
 // ─── Root ─────────────────────────────────────────────────────────────────
 export default function App() {
+  const navigate = useNavigate();
+  const { user, token, logout } = useAuth();
   const [supervisor, setSupervisor] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [page, setPage] = useState("dashboard");
   const [selectedIntern, setSelectedIntern] = useState(null);
   const [prevPage, setPrevPage] = useState(null);
@@ -858,9 +901,60 @@ export default function App() {
   const [supervisorReports, setSupervisorReports] = useState({});
   const [reportModalIntern, setReportModalIntern] = useState(null);
 
-  if (!supervisor) return <Onboarding onComplete={setSupervisor} />;
+  useEffect(() => {
+    const load = async () => {
+      if (!token) {
+        setLoadingProfile(false);
+        return;
+      }
+      try {
+        const res = await axios.get("http://localhost:5000/api/users/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const p = res?.data?.user?.profile || {};
+        if (p.companyName && p.workEmail) {
+          setSupervisor({
+            name: user?.name || user?.fullName || "Supervisor",
+            company: p.companyName,
+            email: p.workEmail,
+            phone: p.phone || "",
+          });
+        }
+      } catch (e) {
+        console.error("Failed to load workplace supervisor profile", e);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+    load();
+  }, [token, user]);
 
-  const navigate = (p, data) => {
+  const completeOnboarding = async (data) => {
+    try {
+      await axios.patch(
+        "http://localhost:5000/api/users/me/profile",
+        {
+          companyName: data.company,
+          workEmail: data.email,
+          phone: data.phone || "",
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setSupervisor({
+        name: user?.name || user?.fullName || "Supervisor",
+        company: data.company,
+        email: data.email,
+        phone: data.phone || "",
+      });
+    } catch (e) {
+      alert(e?.response?.data?.message || "Failed to save profile");
+    }
+  };
+
+  if (loadingProfile) return null;
+  if (!supervisor) return <Onboarding onComplete={completeOnboarding} initialEmail={user?.email || ""} />;
+
+  const navigatePage = (p, data) => {
     setPrevPage(page);
     if (p === "internDetail") setSelectedIntern(data);
     setPage(p);
@@ -878,9 +972,32 @@ export default function App() {
     setSupervisorReports(prev => ({ ...prev, [reportData.internId]: reportData }));
   };
 
+  const handleUpdateCompany = async (companyName) => {
+    if (!companyName?.trim()) return false;
+    try {
+      await axios.patch(
+        "http://localhost:5000/api/users/me/profile",
+        { companyName: companyName.trim() },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setSupervisor((prev) => ({ ...prev, company: companyName.trim() }));
+      return true;
+    } catch (e) {
+      alert(e?.response?.data?.message || "Failed to update company");
+      return false;
+    }
+  };
+
+  const handleLogout = () => {
+    logout?.();
+    setSupervisor(null);
+    setPage("dashboard");
+    navigate("/login");
+  };
+
   return (
     <div style={{ fontFamily: "'DM Sans','Segoe UI',sans-serif", background: C.sage, minHeight: "100vh", color: C.text, overflowX: "hidden" }}>
-      <Navbar page={page} onBack={goBack} onLogout={() => { setSupervisor(null); setPage("dashboard"); }} breadcrumb={page === "internDetail" ? { parent: "All Interns" } : null} />
+      <Navbar page={page} onBack={goBack} onLogout={handleLogout} breadcrumb={page === "internDetail" ? { parent: "All Interns" } : null} />
 
       {page === "dashboard" && (
         <Dashboard
@@ -888,8 +1005,9 @@ export default function App() {
           interns={INTERNS}
           reports={REPORTS}
           supervisorReports={supervisorReports}
-          onNav={navigate}
+          onNav={navigatePage}
           onWriteReport={openReportModal}
+          onUpdateCompany={handleUpdateCompany}
         />
       )}
       {page === "interns" && (
@@ -897,7 +1015,7 @@ export default function App() {
           interns={INTERNS}
           reports={REPORTS}
           supervisorReports={supervisorReports}
-          onDetail={i => navigate("internDetail", i)}
+          onDetail={i => navigatePage("internDetail", i)}
           onWriteReport={openReportModal}
         />
       )}

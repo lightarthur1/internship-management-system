@@ -3,8 +3,18 @@ import { Layout, LogOut, BriefcaseBusiness, FileCheck, Users, TrendingUp } from 
 import '../Admin/AdminDashboard.css'
 import AdminReviewCard from '../../Components/ReviewCard/AdminReviewCard'
 import AdminQuickActionCard from '../../Components/AdminQuickActionCard/AdminQuickActionCard'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../Context/AuthContext'
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout?.();
+    navigate('/login');
+  };
+
   return (
     <div className='Admin'>
       <div className="admin-navbar">
@@ -16,7 +26,7 @@ const AdminDashboard = () => {
           </div>
         </div>
         <div className="btn-div">
-        <button className='logout-btn'><LogOut/>Logout</button>
+        <button className='logout-btn' onClick={handleLogout}><LogOut/>Logout</button>
         </div>
       </div>
       <div className="admin-page-container">

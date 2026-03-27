@@ -51,7 +51,8 @@
 
 .quick-action-sub-title {
   font-size: 0.85rem;
-  color: #666;
+  color: #334155;
+  font-weight: 500;
   margin-bottom: 20px;
   min-height: 40px; 
 }

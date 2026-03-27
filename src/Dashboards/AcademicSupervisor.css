@@ -10,14 +10,15 @@ body,
 
 /* ---- Page main wrapper ---- */
 .asd-main {
-  padding-top: 5rem; /* pt-20 */
+  padding: 1.5rem 1rem 2rem;
+  background: linear-gradient(160deg, #f8fafc 0%, #e0f2fe 45%, #ecfeff 100%);
+  min-height: calc(100vh - 56px);
 }
 
 /* ---- Centered container ---- */
 .asd-container {
   max-width: 72rem; /* max-w-6xl */
   margin: 0 auto;
-  margin-top: 2rem;
 }
 
 /* ---- Generic info / stat card base ---- */
@@ -31,12 +32,12 @@ body,
 
 /* ---- Supervisor info card ---- */
 .asd-info-card {
-
-  background-color: #f3f4f6;
+  background: #ffffffd9;
+  backdrop-filter: blur(4px);
   border-radius: 1rem;
   padding: 1.5rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  border: 1px solid #dbeafe;
 }
 
 .asd-info-title {
@@ -60,14 +61,25 @@ body,
 
 .asd-info-label {
   font-size: 0.875rem;
-  color: #6b7280; /* gray-500 */
+  color: #334155; /* slate-700 */
+  font-weight: 500;
   margin: 0 0 0.25rem;
 }
 
 .asd-info-value {
-  font-weight: 400;
+  font-weight: 500;
   color: #111827; /* gray-900 */
   margin: 0;
+}
+
+.asd-input {
+  width: 100%;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.5rem;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+  font-weight: 600;
+  background: #ffffff;
 }
 
 /* ---- Stats row (3 cards) ---- */
@@ -85,11 +97,12 @@ body,
 }
 
 .asd-stat-card {
-  background-color: #f3f4f6;
+  background: #ffffffd9;
+  backdrop-filter: blur(4px);
   border-radius: 1rem;
   padding: 2rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  border: 1px solid #dbeafe;
 }
 
 .asd-stat-header {
@@ -100,15 +113,15 @@ body,
 }
 
 .asd-stat-label {
-  color: #6b7280;
+  color: #334155;
   font-size: 1rem;
-  font-weight: 400;
+  font-weight: 600;
   margin: 0;
 }
 
 .asd-stat-icon {
   font-size: 1.125rem;
-  color: #6b7280;
+  color: #334155;
 }
 
 .asd-stat-icon--orange {
@@ -135,11 +148,12 @@ body,
 }
 
 .asd-students-card {
-  background-color: #f3f4f6;
+  background: #ffffffd9;
+  backdrop-filter: blur(4px);
   border-radius: 1rem;
   padding: 1.5rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  border: 1px solid #dbeafe;
 }
 
 .asd-students-title {
@@ -150,7 +164,7 @@ body,
 }
 
 .asd-students-subtitle {
-  color: #6b7280;
+  color: #334155;
   font-size: 1rem;
   margin: 0 0 1rem;
 }
@@ -205,7 +219,7 @@ body,
 
 /* Meta info (ID, department, company, location) */
 .asd-student-meta {
-  color: #6b7280;
+  color: #334155;
   font-size: 1rem;
   display: flex;
   flex-direction: column;
@@ -218,7 +232,7 @@ body,
 
 .asd-student-dot {
   font-weight: 700;
-  color: #6b7280;
+  color: #334155;
 }
 
 /* Bottom row: company + location + button */
@@ -245,20 +259,12 @@ body,
   gap: 0.75rem;
   background-color: #14532d; /* green-900 */
   color: #ffffff;
+  font-weight: 600;
   border-radius: 0.5rem;
   padding: 0.5rem 0.75rem;
   cursor: pointer;
   border: none;
   font-size: 0.875rem;
-}
-
-.asd-view-btn button {
-  background: none;
-  border: none;
-  color: #ffffff;
-  cursor: pointer;
-  font-size: 0.875rem;
-  padding: 0;
 }
 
 .asd-view-btn:hover {

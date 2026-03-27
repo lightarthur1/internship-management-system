@@ -5,7 +5,7 @@ const WorkplaceReport = require("../models/WorkplaceReport");
 async function startInternship(req, res) {
   try {
     const userId = req.user?.sub;
-    const { workplaceSupervisorName, workplaceSupervisorEmail, workplaceSupervisorPhone } =
+    const { workplaceSupervisorName, workplaceSupervisorEmail, workplaceSupervisorPhone, companyName } =
       req.body || {};
 
     if (!workplaceSupervisorName || !workplaceSupervisorEmail) {
@@ -23,6 +23,7 @@ async function startInternship(req, res) {
       workplaceSupervisorName,
       workplaceSupervisorEmail,
       workplaceSupervisorPhone: workplaceSupervisorPhone || "",
+      companyName: companyName || user.profile?.companyName || "",
     };
     await user.save();
 

@@ -1,7 +1,8 @@
 .admin-navbar{
-  background: linear-gradient(to right,#004D36,rgb(28, 79, 19));
+  background: linear-gradient(90deg, #0f172a 0%, #14532d 100%);
   width: 100%;
   height: 5.5rem;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
 }
 
 .admin-navbar{
@@ -27,27 +28,36 @@
 .header{
   text-align: center;
   line-height: 20px;
+  color: #ffffff;
+  margin: 0;
+}
+
+.sub-title {
+  color: rgba(255, 255, 255, 0.82);
+  margin: 0;
 }
 
 .logo{
   display: flex;
-  background-color: rgba(36, 67, 48, 0.203);
+  background-color: rgba(255, 255, 255, 0.12);
   justify-content: center;
   align-items: center;
   overflow: hidden;
   border-radius: 5px;
+  color: #ffffff;
 }
 
 .logout-btn{
   height: 40px;
   width: 100px;
-   background-color:transparent;
+  background-color:transparent;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 10px;
   border: 1px solid;
   border-radius: 10px;
+  color: #ffffff;
 
 
   transition: all 0.3s ease; 
@@ -74,28 +84,29 @@
 }
 
 .admin-page-container{
-  background-color: rgb(214, 242, 236);
-  height: 100vh;
+  background: linear-gradient(160deg, #f0fdf4 0%, #dcfce7 45%, #f0f9ff 100%);
+  min-height: calc(100vh - 5.5rem);
+  padding-bottom: 2rem;
 }
 
 .cards-container{
   width: 100%;
   display: grid;
-grid-template-columns: repeat(4, 1fr);  
-padding: 50px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 40px;
+  gap: 18px;
 }
 
 .quick-action-container {
-  padding: 20px;
-  background-color:rgb(214, 242, 236);
-  padding: 40px; /* Light sage background from UI */
+  padding: 0 40px 20px;
+  background: transparent;
 
 }
 
-.quick-action-container > p {
+.quick-action-heading {
   font-size: 1.5rem;
-  font-weight: 500;
-  color: #000;
+  font-weight: 700;
+  color: #0f172a;
   margin-bottom: 20px;
   text-align: left;
 }
@@ -107,4 +118,34 @@ padding: 50px;
   max-width: 1200px;
   justify-content: center;
   align-items: center;
+}
+
+@media (max-width: 1200px) {
+  .cards-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .quick-action-cards-wrapper {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-navbar {
+    height: auto;
+    padding: 12px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .cards-container,
+  .quick-action-container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .cards-container,
+  .quick-action-cards-wrapper {
+    grid-template-columns: 1fr;
+  }
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../Context/AuthContext";
+import { API_BASE_URL } from "../config/api";
 
 export const EMPTY_FORM = {
   company: "",
@@ -15,7 +16,7 @@ export default function useOpportunities() {
   const { token } = useAuth();
   const api = useMemo(() => {
     return axios.create({
-      baseURL: "http://localhost:5000/api",
+      baseURL: API_BASE_URL,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   }, [token]);

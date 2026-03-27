@@ -1,11 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
-
-const API_BASE_URL = 'http://localhost:5000/api';
 
 const normalizeUser = (userData) => {
     if (!userData) return userData;

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 import axios from "axios";
+import { API_BASE_URL } from "../config/api";
 import {
   Briefcase, FileText, Clock, Download, LogOut, CheckCircle,
   ChevronRight, ArrowLeft, Search, MapPin, Calendar, Upload,
@@ -9,6 +10,8 @@ import {
   TrendingUp, Award, Star, BookOpen, Zap,
   Building2, GraduationCap, Hash, Phone, ChevronDown
 } from "lucide-react";
+
+const API = API_BASE_URL;
 
 /* ════════════════════════════════════════════════════════════════════
    CSS
@@ -542,6 +545,14 @@ const HomePage = ({ user, profile, onNavigate, internshipStarted, onToggleIntern
                 </div>
               </div>
               <div className="fg">
+                <label className="fl">Company</label>
+                <input className="fi" value={draft.company || ""} onChange={(e) => setDraft((p) => ({ ...p, company: e.target.value }))} />
+              </div>
+              <div className="fg">
+                <label className="fl">Location / State of Origin</label>
+                <input className="fi" value={draft.state || ""} onChange={(e) => setDraft((p) => ({ ...p, state: e.target.value }))} />
+              </div>
+              <div className="fg">
                 <label className="fl">Academic Supervisor Name (optional)</label>
                 <input className="fi" value={draft.supervisor || ""} onChange={(e) => setDraft((p) => ({ ...p, supervisor: e.target.value }))} />
               </div>
@@ -565,6 +576,8 @@ const HomePage = ({ user, profile, onNavigate, internshipStarted, onToggleIntern
                 ["Department",  profile.dept      ],
                 ["Level",       profile.level     ],
                 ["Phone",       profile.phone     ],
+                ["Company",     profile.company   ],
+                ["Location",    profile.state     ],
                 ["Email",       user?.email       ],
                 ["Supervisor",  profile.supervisor],
               ].map(([l, v]) => (
@@ -618,8 +631,8 @@ const HomePage = ({ user, profile, onNavigate, internshipStarted, onToggleIntern
               <Ic icon={Building2} size={22} color="#15653a" />
             </div>
             <div>
-              <p style={{ fontSize:16, fontWeight:700, color:"#111827" }}>Tech Solutions Ltd</p>
-              <p style={{ fontSize:13, color:"#6b7280", marginTop:2, display:"flex", alignItems:"center", gap:5 }}><Ic icon={MapPin} size={12} color="#9ca3af" />Lagos, Nigeria</p>
+              <p style={{ fontSize:16, fontWeight:700, color:"#111827" }}>{profile.company || "Company not set"}</p>
+              <p style={{ fontSize:13, color:"#6b7280", marginTop:2, display:"flex", alignItems:"center", gap:5 }}><Ic icon={MapPin} size={12} color="#9ca3af" />{profile.state || "Location not set"}</p>
             </div>
           </div>
           <div style={{ marginBottom:16 }}>
@@ -678,7 +691,7 @@ const OppsPage = ({ onNavigate, applied, setApplied, showToast }) => {
     const load = async () => {
       setLoadingOpps(true);
       try {
-        const res = await axios.get("http://localhost:5000/api/opportunities?active=true");
+        const res = await axios.get(`${API}/opportunities?active=true`);
         const items = res?.data?.opportunities || [];
         setCompanies(
           items.map((o) => ({
@@ -695,6 +708,19 @@ const OppsPage = ({ onNavigate, applied, setApplied, showToast }) => {
         );
       } catch (e) {
         console.error("Failed to load opportunities", e);
+        setCompanies(
+          OPPS.map((o) => ({
+            id: o.id,
+            name: o.company,
+            loc: o.loc,
+            emoji: o.emoji,
+            desc: o.desc,
+            positions: o.positions,
+            dur: o.dur,
+            roles: o.skills || [],
+            skills: o.skills || [],
+          }))
+        );
         showToast("Failed to load opportunities", "error");
       } finally {
         setLoadingOpps(false);
@@ -708,7 +734,7 @@ const OppsPage = ({ onNavigate, applied, setApplied, showToast }) => {
       const token = localStorage.getItem("ims_token");
       if (!token) return;
       try {
-        const res = await axios.get("http://localhost:5000/api/letters/mine", {
+        const res = await axios.get(`${API}/letters/mine`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const requestedIds = (res?.data?.letters || [])
@@ -740,7 +766,7 @@ const OppsPage = ({ onNavigate, applied, setApplied, showToast }) => {
 
     try {
       await axios.post(
-        "http://localhost:5000/api/letters/request",
+        `${API}/letters/request`,
         { opportunityId: c.id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -754,7 +780,7 @@ const OppsPage = ({ onNavigate, applied, setApplied, showToast }) => {
   };
 
   return (
-    <div className="fade-in" style={{ maxWidth:1100, margin:"0 auto" }}>{"}"}
+    <div className="fade-in" style={{ maxWidth:1100, margin:"0 auto" }}>
 
       {/* Header row */}
       <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
@@ -933,6 +959,16 @@ const INIT_PREV_REPORTS = [
   { id:2, date:"2026-02-14", type:"weekly", summary:"Set up the development environment and familiarised myself with the codebase.", status:"reviewed", feedback:"Great start! Keep up the good work." },
   { id:3, date:"2026-02-28", type:"weekly", summary:"Working on database integration and API endpoints.", status:"pending", feedback:"" },
 ];
+const INIT_WORKPLACE_REPORTS = [
+  {
+    _id: "demo-workplace-report-1",
+    period: "February 2026",
+    rating: 4,
+    summary: "Consistent attendance and quality contribution to assigned tasks.",
+    recommendation: "Continue improving communication and documentation.",
+    createdAt: new Date("2026-02-28").toISOString(),
+  },
+];
 
 const ReportsPage = ({ onNavigate, showToast, token }) => {
   const [reportType, setReportType] = useState("Weekly Report");
@@ -945,10 +981,10 @@ const ReportsPage = ({ onNavigate, showToast, token }) => {
       if (!token) return;
       try {
         const [logsRes, workplaceRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/student/me/logs", {
+          axios.get(`${API}/student/me/logs`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get("http://localhost:5000/api/student/me/workplace-reports", {
+          axios.get(`${API}/student/me/workplace-reports`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -965,6 +1001,8 @@ const ReportsPage = ({ onNavigate, showToast, token }) => {
         setWorkplaceReports(workplaceRes?.data?.reports || []);
       } catch (e) {
         console.error("Failed to load reports", e);
+        setPrevReports(INIT_PREV_REPORTS);
+        setWorkplaceReports(INIT_WORKPLACE_REPORTS);
       }
     };
     load();
@@ -985,7 +1023,7 @@ const ReportsPage = ({ onNavigate, showToast, token }) => {
     }
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/student/me/logs",
+        `${API}/student/me/logs`,
         { periodType: mapPeriodType(reportType), content: content.trim() },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -1187,8 +1225,8 @@ const StatusPage = ({ onNavigate, internshipStarted, profile, user, reports, sho
               <Ic icon={Building2} size={22} color="#15653a" />
             </div>
             <div>
-              <p style={{ fontSize:16, fontWeight:700, color:"#111827" }}>Tech Solutions Ltd</p>
-              <p style={{ fontSize:13, color:"#6b7280" }}>Lagos, Nigeria · 6 Months</p>
+              <p style={{ fontSize:16, fontWeight:700, color:"#111827" }}>{profile.company || "Company not set"}</p>
+              <p style={{ fontSize:13, color:"#6b7280" }}>{profile.state || "Location not set"} · 6 Months</p>
             </div>
           </div>
           <div className="status-sg" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
@@ -1277,7 +1315,7 @@ export default function StudentDashboard() {
         return;
       }
       try {
-        const res = await axios.get("http://localhost:5000/api/users/me", {
+        const res = await axios.get(`${API}/users/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const p = res?.data?.user?.profile;
@@ -1289,6 +1327,7 @@ export default function StudentDashboard() {
             level: p.level || "",
             phone: p.phone || "",
             state: p.stateOfOrigin || "",
+            company: p.companyName || "",
             supervisor: p.preferredAcademicSupervisorName || "",
           });
         }
@@ -1307,7 +1346,7 @@ export default function StudentDashboard() {
     try {
       if (token) {
         const res = await axios.patch(
-          "http://localhost:5000/api/users/me/profile",
+          `${API}/users/me/profile`,
           {
             studentId: wizardProfile.studentId,
             department: wizardProfile.dept,
@@ -1326,6 +1365,7 @@ export default function StudentDashboard() {
           level: p.level || "",
           phone: p.phone || "",
           state: p.stateOfOrigin || "",
+          company: p.companyName || "",
           supervisor: p.preferredAcademicSupervisorName || "",
         });
         return;
@@ -1350,13 +1390,15 @@ export default function StudentDashboard() {
     const workplaceSupervisorEmail = window.prompt("Enter workplace supervisor email:");
     if (!workplaceSupervisorEmail) return;
     const workplaceSupervisorPhone = window.prompt("Enter workplace supervisor phone (optional):") || "";
+    const companyName = window.prompt("Enter company name:") || profile?.company || "";
 
     try {
       await axios.patch(
-        "http://localhost:5000/api/student/me/internship/start",
-        { workplaceSupervisorName, workplaceSupervisorEmail, workplaceSupervisorPhone },
+        `${API}/student/me/internship/start`,
+        { workplaceSupervisorName, workplaceSupervisorEmail, workplaceSupervisorPhone, companyName },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      setProfile((prev) => ({ ...(prev || {}), company: companyName || prev?.company || "" }));
       setStarted(true);
       showToast("Internship marked as started! 🎉");
     } catch (e) {
@@ -1368,12 +1410,14 @@ export default function StudentDashboard() {
     if (!nextProfile) return false;
     try {
       const res = await axios.patch(
-        "http://localhost:5000/api/users/me/profile",
+        `${API}/users/me/profile`,
         {
           studentId: nextProfile.studentId || "",
           department: nextProfile.dept || "",
           level: nextProfile.level || "",
           phone: nextProfile.phone || "",
+          stateOfOrigin: nextProfile.state || "",
+          companyName: nextProfile.company || "",
           preferredAcademicSupervisorName: nextProfile.supervisor || "",
         },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -1386,6 +1430,7 @@ export default function StudentDashboard() {
         level: p.level || "",
         phone: p.phone || "",
         state: p.stateOfOrigin || "",
+        company: p.companyName || "",
         supervisor: p.preferredAcademicSupervisorName || "",
       });
       showToast("Student profile updated.");

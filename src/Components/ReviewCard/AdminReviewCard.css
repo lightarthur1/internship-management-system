@@ -1,13 +1,14 @@
 .admin-review-card{
-  background-color: rgb(255, 255, 255);
-  height: 10rem;
-  width: 20rem;
-  border: 1px solid rgba(154, 154, 159, 0.429);
+  background: linear-gradient(160deg, #ffffff 0%, #f8fafc 100%);
+  min-height: 10rem;
+  width: 100%;
+  border: 1px solid #dbeafe;
   border-radius: 15px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
 }
 
 .card-header {
-  color: #444; 
+  color: #1f2937;
   display: flex;
   justify-content: space-between; 
   align-items: center;
@@ -17,16 +18,17 @@
 
 .card-header p {
   margin: 0;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.9rem;
 }
 
 .number {
-  color: black;
+  color: #0f172a;
   font-size: 2rem;
   margin: 0;
   margin-top: auto; 
   text-align: left; 
+  font-weight: 800;
 }
 
 

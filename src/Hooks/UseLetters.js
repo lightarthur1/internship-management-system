@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../Context/AuthContext";
+import { API_BASE_URL } from "../config/api";
 
 export default function useLetters() {
   const { token } = useAuth();
   const api = useMemo(
     () =>
       axios.create({
-        baseURL: "http://localhost:5000/api",
+        baseURL: API_BASE_URL,
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       }),
     [token]

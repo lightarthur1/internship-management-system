@@ -32,7 +32,9 @@ const StudentCard = ({ student, supervisors, onAssign }) => {
       <SupervisorDropdown
         supervisors={supervisors}
         selectedId={student.supervisorId}
-        onSelect={(supervisorId) => onAssign(student.id, supervisorId)}
+        onSelect={(supervisorUserId) =>
+          onAssign(student.userId, supervisorUserId)
+        }
       />
     </div>
   );

@@ -1,6 +1,7 @@
 import React from "react";
 import "./OpportunityCard.css";
 import { Building2, Pencil, Trash2 } from "lucide-react";
+import { isOpportunityLogoImage } from "../../utils/opportunityLogo";
 
 const OpportunityCard = ({
   company,
@@ -17,8 +18,10 @@ const OpportunityCard = ({
       <div className="card-info">
 
         <div className="card-header">
-          {logo ? (
+          {isOpportunityLogoImage(logo) ? (
             <img src={logo} alt={company} className="company-logo" />
+          ) : logo ? (
+            <span className="company-emoji-mark" aria-hidden>{logo}</span>
           ) : (
             <Building2 size={28} className="company-icon" />
           )}

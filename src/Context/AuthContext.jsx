@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 
 const AuthContext = createContext();
 
@@ -61,23 +61,47 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("ims_user");
   };
 
-  // ── Authenticated fetch helper (use this for all API calls in dashboards) ──
-  const authFetch = async (endpoint, options = {}) => {
-    const res = await fetch(`${API}${endpoint}`, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        ...(options.headers || {}),
-      },
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message);
-    return data;
+  /** After accept-invite (or similar) when the API returns token + user */
+  const applySession = (nextToken, nextUser) => {
+    setToken(nextToken);
+    setUser(nextUser);
+    localStorage.setItem("ims_token", nextToken);
+    localStorage.setItem("ims_user", JSON.stringify(nextUser));
   };
 
+  // ── Authenticated fetch helper (use this for all API calls in dashboards) ──
+  const authFetch = useCallback(
+    async (endpoint, options = {}) => {
+      const headers = {
+        ...(options.body && !(options.body instanceof FormData)
+          ? { "Content-Type": "application/json" }
+          : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options.headers || {}),
+      };
+
+      const res = await fetch(`${API}${endpoint}`, { ...options, headers });
+
+      const text = await res.text();
+      let data;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        throw new Error(res.status >= 400 ? `Request failed (${res.status})` : "Invalid server response.");
+      }
+
+      if (!res.ok || data.success === false) {
+        throw new Error(data.message || `Request failed (${res.status})`);
+      }
+      return data;
+    },
+    [token]
+  );
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, signup, login, logout, authFetch }}>
+    <AuthContext.Provider
+      value={{ user, token, loading, signup, login, logout, applySession, authFetch }}
+    >
       {!loading && children}
     </AuthContext.Provider>
   );

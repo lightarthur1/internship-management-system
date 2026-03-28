@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 import {
@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import generateInternshipLetter from "../utils/generateInternshipLetter";
 import knustLogo from "../assets/knust-logo.png";
+import { isOpportunityLogoImage } from "../utils/opportunityLogo";
 
 /* ════════════════════════════════════════════════════════════════════
    CSS
@@ -366,23 +367,22 @@ const useToast = () => {
 const DEPTS  = ["Computer Science","Electrical Engineering","Mechanical Engineering","Civil Engineering","Information Technology","Accounting","Business Administration","Mass Communication","Architecture","Medicine & Surgery","Law","Economics","Mathematics","Physics"];
 const LEVELS = ["100 Level","200 Level","300 Level","400 Level","500 Level","Postgraduate"];
 
-const OPPS = [
-  { id:1, role:"Software Engineering Intern",  company:"Google Nigeria",    loc:"Lagos, Nigeria",  type:"On-site", dur:"3 months", logo:"GN", col:"#4285f4", pay:"₦150k/mo", ddl:"Nov 15, 2024", desc:"Join Google's engineering team to build scalable systems and work on real user-facing products alongside senior engineers.",    skills:["React","Node.js","Python"]       },
-  { id:2, role:"Data Analyst Intern",          company:"Access Bank Plc",   loc:"Abuja, Nigeria",  type:"Hybrid",  dur:"6 months", logo:"AB", col:"#e63946", pay:"₦80k/mo",  ddl:"Nov 30, 2024", desc:"Analyse financial data, build dashboards, and present insights to senior management in one of Nigeria's largest banks.",       skills:["SQL","Excel","Power BI"]         },
-  { id:3, role:"UI/UX Design Intern",          company:"Flutterwave",       loc:"Remote",          type:"Remote",  dur:"4 months", logo:"FW", col:"#f97316", pay:"₦100k/mo", ddl:"Dec 5, 2024",  desc:"Design beautiful fintech products used by millions across Africa. Work directly with the product and engineering teams.",       skills:["Figma","Prototyping","Research"]  },
-  { id:4, role:"Cybersecurity Intern",         company:"Interswitch Group", loc:"Lagos, Nigeria",  type:"On-site", dur:"3 months", logo:"IG", col:"#7c3aed", pay:"₦90k/mo",  ddl:"Nov 20, 2024", desc:"Help protect critical financial infrastructure. Conduct vulnerability assessments and respond to incidents.",                  skills:["Linux","Networking","SIEM"]       },
-  { id:5, role:"Backend Developer Intern",     company:"Paystack",          loc:"Lagos, Nigeria",  type:"On-site", dur:"6 months", logo:"PS", col:"#0284c7", pay:"₦120k/mo", ddl:"Dec 1, 2024",  desc:"Build the APIs that power payments for thousands of businesses. Deep-dive into Go, distributed systems, and payment protocols.", skills:["Go","PostgreSQL","Redis"]         },
-  { id:6, role:"Product Management Intern",    company:"Kuda Bank",         loc:"Lagos, Nigeria",  type:"Hybrid",  dur:"3 months", logo:"KB", col:"#059669", pay:"₦85k/mo",  ddl:"Nov 25, 2024", desc:"Shape the roadmap of a leading neobank. Work on user research, define features, and coordinate between design and engineering.", skills:["Analytics","Jira","Research"]     },
-];
+/** Map UI labels → API enum (InternshipReport.reportType) */
+const REPORT_TYPE_TO_API = {
+  "Weekly Report": "weekly",
+  "Bi-weekly Report": "bi-weekly",
+  "Monthly Report": "monthly",
+  "Incident Report": "incident",
+  "Final Report": "final",
+};
 
-const INIT_REPORTS = [
-  { id:1, week:1, title:"Orientation & Environment Setup",  summary:"Completed company orientation, set up dev environment, met team members and understood project scope.",                 hours:40, submitted:"Sep 9, 2024",  status:"approved", feedback:"Great start! Clear and concise."   },
-  { id:2, week:2, title:"Frontend Component Development",   summary:"Built reusable UI components using React, implemented responsive layouts, and participated in daily standups.",         hours:40, submitted:"Sep 16, 2024", status:"approved", feedback:"Well documented."                  },
-  { id:3, week:3, title:"API Integration",                  summary:"Integrated backend REST APIs into the frontend, handled authentication flows, and wrote unit tests.",                    hours:38, submitted:"Sep 23, 2024", status:"approved", feedback:"Good work on error handling."       },
-  { id:4, week:4, title:"Code Review & Bug Fixes",          summary:"Participated in code reviews, resolved critical bugs reported in production, improved test coverage to 80%.",           hours:40, submitted:"Sep 30, 2024", status:"pending",  feedback:""                                  },
-  { id:5, week:5, title:"", summary:"", hours:40, submitted:"", status:"draft", feedback:"" },
-  { id:6, week:6, title:"", summary:"", hours:40, submitted:"", status:"draft", feedback:"" },
-];
+const normalizeStudentProfile = (p) =>
+  p
+    ? {
+        ...p,
+        dept: p.department || "",
+      }
+    : null;
 
 /* ════════════════════════════════════════════════════════════════════
    PROFILE SETUP WIZARD
@@ -406,7 +406,7 @@ export const ProfileWizard = ({ user, onComplete }) => {
     authFetch("/student/academic-supervisors")
       .then(data => setSups(data.supervisors || []))
       .catch(() => {}); // fallback: empty list — admin will assign
-  }, []);
+  }, [authFetch]);
 
   const canNext = () => {
     if (step === 1) return f.studentId.trim() && f.dept && f.level;
@@ -677,14 +677,28 @@ export const InternshipStartModal = ({ open, onClose, onConfirm, showToast }) =>
 /* ════════════════════════════════════════════════════════════════════
    HOME PAGE
 ════════════════════════════════════════════════════════════════════ */
-const HomePage = ({ user, profile, onNavigate, internshipStarted, setInternshipStarted, reports, appliedCount, showToast }) => {
-  const submitted  = reports.filter(r => r.status !== "draft").length;
-  const approved   = reports.filter(r => r.status === "approved").length;
-  const pending    = reports.filter(r => r.status === "pending").length;
+const HomePage = ({
+  user,
+  profile,
+  onNavigate,
+  internshipStarted,
+  setInternshipStarted,
+  reports,
+  appliedCount,
+  showToast,
+  approvedLetterMongoId,
+  letterStatusLabel,
+  onProfileRefresh,
+}) => {
+  const submitted  = reports.filter((r) => r.status !== "draft").length;
+  const approved   = reports.filter((r) => r.status === "approved" || r.status === "reviewed").length;
+  const pending    = reports.filter((r) => r.status === "pending").length;
   const initials   = (user?.name || "ST").split(" ").map(w => w[0]).slice(0,2).join("").toUpperCase();
 
   const [showStartModal, setShowStartModal] = useState(false);
   const { authFetch } = useAuth();
+  const weekTarget   = 12;
+  const progressPct  = Math.min(100, Math.round((submitted / weekTarget) * 100));
 
   return (
     <div className="fade-in">
@@ -766,42 +780,44 @@ const HomePage = ({ user, profile, onNavigate, internshipStarted, setInternshipS
         <div className="card-body">
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
             <p className="card-title" style={{ margin:0 }}>Current Application</p>
-            <span className="badge bdk"><Ic icon={CheckCircle} size={10} color="#fff" />Approved</span>
+            <span className="badge bdk"><Ic icon={CheckCircle} size={10} color="#fff" />{letterStatusLabel}</span>
           </div>
           <div style={{ display:"flex", gap:14, alignItems:"center", marginBottom:16, flexWrap:"wrap" }}>
             <div style={{ width:46, height:46, borderRadius:12, background:"rgba(21,101,58,.1)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <Ic icon={Building2} size={22} color="#15653a" />
             </div>
             <div>
-              <p style={{ fontSize:16, fontWeight:700, color:"#111827" }}>Tech Solutions Ltd</p>
-              <p style={{ fontSize:13, color:"#6b7280", marginTop:2, display:"flex", alignItems:"center", gap:5 }}><Ic icon={MapPin} size={12} color="#9ca3af" />Lagos, Nigeria</p>
+              <p style={{ fontSize:16, fontWeight:700, color:"#111827" }}>{profile.companyName || "No company selected yet"}</p>
+              <p style={{ fontSize:13, color:"#6b7280", marginTop:2, display:"flex", alignItems:"center", gap:5 }}><Ic icon={MapPin} size={12} color="#9ca3af" />{profile.companyLocation || "—"}</p>
             </div>
           </div>
           <div style={{ marginBottom:16 }}>
             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
               <span style={{ fontSize:12, color:"#6b7280", fontWeight:500 }}>Internship Progress</span>
-              <span style={{ fontSize:12, fontWeight:700, color:"#15653a" }}>{Math.round((submitted / 12) * 100)}%</span>
+              <span style={{ fontSize:12, fontWeight:700, color:"#15653a" }}>{progressPct}%</span>
             </div>
-            <div className="prog-track"><div className="prog-fill" style={{ width:`${(submitted/12)*100}%` }} /></div>
-            <p style={{ fontSize:11, color:"#9ca3af", marginTop:5 }}>{submitted} of 12 weeks reported</p>
+            <div className="prog-track"><div className="prog-fill" style={{ width:`${progressPct}%` }} /></div>
+            <p style={{ fontSize:11, color:"#9ca3af", marginTop:5 }}>{submitted} of {weekTarget} weeks reported</p>
           </div>
           <div className="divider" />
 
           <button
             className="btn-p"
             style={{ width:"100%", padding:"11px" }}
+            disabled={!approvedLetterMongoId}
             onClick={async () => {
+              if (!approvedLetterMongoId) return;
               try {
-                    const data = await authFetch(`/letters/${letterId}/download`);
-                    generateInternshipLetter(data.letter, knustLogo);
-                    showToast("Letter opened — press Ctrl+P to save as PDF");
-                  } catch (err) {
-                      showToast(err.message, "error");
-                  }
-  }}
->
-  <Ic icon={Download} size={15} />Download Internship Letter
-</button>
+                const data = await authFetch(`/letters/${approvedLetterMongoId}/download`);
+                generateInternshipLetter(data.letter, knustLogo);
+                showToast("Letter opened — press Ctrl+P to save as PDF");
+              } catch (err) {
+                showToast(err.message, "error");
+              }
+            }}
+          >
+            <Ic icon={Download} size={15} />Download Internship Letter
+          </button>
         </div>
       </div>
 
@@ -832,12 +848,13 @@ const HomePage = ({ user, profile, onNavigate, internshipStarted, setInternshipS
   open={showStartModal}
   onClose={() => setShowStartModal(false)}
   onConfirm={async (data) => {
-    await authFetch("/student/start-internship", {
+    const res = await authFetch("/student/start-internship", {
       method: "POST",
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
     setInternshipStarted(true);
     setShowStartModal(false);
+    if (res.profile && onProfileRefresh) onProfileRefresh(res.profile);
   }}
   showToast={showToast}
 />
@@ -849,36 +866,87 @@ const HomePage = ({ user, profile, onNavigate, internshipStarted, setInternshipS
    OPPORTUNITIES  –  3-column card grid (matches screenshot)
 ════════════════════════════════════════════════════════════════════ */
 
-/* Company data for the card grid */
-const COMPANIES = [
-  { id:1, name:"Tech Solutions Ltd",     loc:"Lagos, Nigeria",      emoji:"🏢", desc:"Looking for software development interns to work on web applications",              positions:5, dur:"6 months", roles:["Software Eng","Frontend Dev","Backend Dev"],       skills:["React","Node.js","Python"]       },
-  { id:2, name:"Digital Marketing Pro",  loc:"Abuja, Nigeria",      emoji:"📱", desc:"Marketing and social media management internship opportunity",                       positions:3, dur:"4 months", roles:["Marketing Intern","Social Media","Content Writer"], skills:["Canva","Meta Ads","Analytics"]   },
-  { id:3, name:"Finance Group Inc",      loc:"Port Harcourt, Nigeria",emoji:"💼", desc:"Accounting and finance internship for business students",                          positions:4, dur:"5 months", roles:["Finance Intern","Audit Intern","Tax Analyst"],      skills:["Excel","QuickBooks","IFRS"]      },
-  { id:4, name:"Engineering Dynamics",   loc:"Ibadan, Nigeria",     emoji:"⚙️", desc:"Mechanical and electrical engineering internship program",                           positions:6, dur:"6 months", roles:["Mechanical Eng","Electrical Eng","CAD Designer"],   skills:["AutoCAD","MATLAB","SolidWorks"]  },
-  { id:5, name:"Health Innovations Ltd", loc:"Lagos, Nigeria",      emoji:"🏥", desc:"Healthcare management and research internship positions available",                  positions:2, dur:"3 months", roles:["Research Intern","Admin Intern"],                   skills:["MS Office","Research","Data"]    },
-  { id:6, name:"AgriTech Nigeria",       loc:"Kano, Nigeria",       emoji:"🌱", desc:"Agricultural technology and farm management internship for science students",        positions:4, dur:"4 months", roles:["AgriTech Intern","Field Researcher"],               skills:["GIS","Data Analysis","Botany"]   },
-];
+function OpportunityMark({ value, size = 48, fontSize }) {
+  const fs = fontSize ?? Math.round(size * 0.45);
+  const base = {
+    width: size,
+    height: size,
+    borderRadius: size >= 52 ? 12 : 10,
+    background: "#f3f4f6",
+    border: "1px solid #e5e7eb",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    overflow: "hidden",
+  };
+  if (isOpportunityLogoImage(value)) {
+    return (
+      <div style={base}>
+        <img src={value} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      </div>
+    );
+  }
+  return <div style={{ ...base, fontSize: fs, lineHeight: 1 }}>{value}</div>;
+}
 
-const OppsPage = ({ onNavigate, applied, setApplied, showToast }) => {
+const OppsPage = ({ onNavigate, appliedIds, setAppliedIds, showToast, onAfterLetterRequest }) => {
+  const { authFetch } = useAuth();
   const [search, setSearch] = useState("");
   const [modal,  setModal]  = useState(null);
   const [reqModal, setReqModal] = useState(null);
+  const [companies, setCompanies] = useState([]);
+  const [loading, setLoading]     = useState(true);
 
-  const filtered = COMPANIES.filter(c => {
+  useEffect(() => {
+    let cancelled = false;
+    authFetch("/opportunities")
+      .then((d) => {
+        if (cancelled) return;
+        const mapped = (d.opportunities || []).map((o) => ({
+          id:          o._id,
+          name:        o.companyName,
+          loc:         o.location,
+          emoji:       o.companyEmoji || "🏢",
+          desc:        o.description,
+          positions:   o.positions,
+          dur:         o.duration,
+          roles:       o.roles  || [],
+          skills:      o.skills || [],
+          type:        o.type,
+          stipend:     o.stipend,
+        }));
+        setCompanies(mapped);
+      })
+      .catch((e) => showToast(e.message, "error"))
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [authFetch, showToast]);
+
+  const filtered = companies.filter((c) => {
     const q = search.toLowerCase();
     return !q || c.name.toLowerCase().includes(q) || c.loc.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q);
   });
 
-  const isApp = id => applied.includes(id);
+  const isApp = (id) => appliedIds.includes(id);
 
-  const handleRequest = (c) => {
-    setReqModal(null);
-    setApplied(a => [...a, c.id]);
-    showToast(`Internship letter requested from ${c.name}!`);
+  const handleRequest = async (c) => {
+    try {
+      await authFetch("/letters/request", {
+        method: "POST",
+        body: JSON.stringify({ opportunityId: c.id }),
+      });
+      setReqModal(null);
+      setAppliedIds((a) => (a.includes(c.id) ? a : [...a, c.id]));
+      showToast(`Internship letter requested for ${c.name}!`);
+      onAfterLetterRequest?.();
+    } catch (e) {
+      showToast(e.message, "error");
+    }
   };
 
   return (
-    <div className="fade-in" style={{ maxWidth:1100, margin:"0 auto" }}>{"}"}
+    <div className="fade-in" style={{ maxWidth:1100, margin:"0 auto" }}>
 
       {/* Header row */}
       <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
@@ -900,7 +968,9 @@ const OppsPage = ({ onNavigate, applied, setApplied, showToast }) => {
       </div>
 
       {/* Card grid — 3 columns matching screenshot */}
-      {filtered.length === 0
+      {loading ? (
+        <div className="empty"><Ic icon={Briefcase} size={28} color="#9ca3af" /><p style={{ marginTop:12, fontWeight:700, color:"#374151" }}>Loading opportunities…</p></div>
+      ) : filtered.length === 0
         ? <div className="empty"><Ic icon={Briefcase} size={28} color="#9ca3af" /><p style={{ marginTop:12, fontWeight:700, color:"#374151" }}>No companies found</p></div>
         : (
           <div className="opp-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:20 }}>
@@ -920,9 +990,7 @@ const OppsPage = ({ onNavigate, applied, setApplied, showToast }) => {
               >
                 {/* Company logo row */}
                 <div style={{ display:"flex", alignItems:"flex-start", gap:14, marginBottom:16 }}>
-                  <div style={{ width:48, height:48, borderRadius:10, background:"#f3f4f6", border:"1px solid #e5e7eb", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, flexShrink:0 }}>
-                    {c.emoji}
-                  </div>
+                  <OpportunityMark value={c.emoji} size={48} />
                   <div>
                     <p style={{ fontSize:15, fontWeight:700, color:"#111827", lineHeight:1.3 }}>{c.name}</p>
                     <p style={{ fontSize:12, color:"#6b7280", marginTop:4, display:"flex", alignItems:"center", gap:4 }}>
@@ -972,7 +1040,7 @@ const OppsPage = ({ onNavigate, applied, setApplied, showToast }) => {
           <div className="mb" onClick={e => e.stopPropagation()}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20 }}>
               <div style={{ display:"flex", gap:14, alignItems:"center" }}>
-                <div style={{ width:52, height:52, borderRadius:12, background:"#f3f4f6", border:"1px solid #e5e7eb", display:"flex", alignItems:"center", justifyContent:"center", fontSize:24 }}>{modal.emoji}</div>
+                <OpportunityMark value={modal.emoji} size={52} fontSize={24} />
                 <div>
                   <p style={{ fontSize:16, fontWeight:800, color:"#111827" }}>{modal.name}</p>
                   <p style={{ fontSize:13, color:"#6b7280", display:"flex", alignItems:"center", gap:4 }}>
@@ -1024,8 +1092,12 @@ const OppsPage = ({ onNavigate, applied, setApplied, showToast }) => {
         <div className="mo" onClick={() => setReqModal(null)}>
           <div className="mb" style={{ maxWidth:420 }} onClick={e => e.stopPropagation()}>
             <div style={{ textAlign:"center", padding:"8px 0 20px" }}>
-              <div style={{ width:56, height:56, borderRadius:16, background:"#f0fdf4", border:"1.5px solid #bbf7d0", display:"flex", alignItems:"center", justifyContent:"center", fontSize:26, margin:"0 auto 16px" }}>
-                {reqModal.emoji}
+              <div style={{ margin:"0 auto 16px", width:56, height:56, borderRadius:16, background:"#f0fdf4", border:"1.5px solid #bbf7d0", display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
+                {isOpportunityLogoImage(reqModal.emoji) ? (
+                  <img src={reqModal.emoji} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                ) : (
+                  <span style={{ fontSize:26, lineHeight:1 }}>{reqModal.emoji}</span>
+                )}
               </div>
               <p style={{ fontSize:17, fontWeight:800, color:"#111827", marginBottom:6 }}>Request Internship Letter</p>
               <p style={{ fontSize:13, color:"#6b7280", lineHeight:1.6 }}>
@@ -1050,31 +1122,41 @@ const OppsPage = ({ onNavigate, applied, setApplied, showToast }) => {
 ════════════════════════════════════════════════════════════════════ */
 const REPORT_TYPES = ["Weekly Report","Bi-weekly Report","Monthly Report","Incident Report","Final Report"];
 
-const INIT_PREV_REPORTS = [
-  { id:1, date:"2026-02-21", type:"weekly", summary:"This week I worked on the user authentication module. Implemented login and registration features.", status:"reviewed", feedback:"Good progress! Make sure to add validation." },
-  { id:2, date:"2026-02-14", type:"weekly", summary:"Set up the development environment and familiarised myself with the codebase.", status:"reviewed", feedback:"Great start! Keep up the good work." },
-  { id:3, date:"2026-02-28", type:"weekly", summary:"Working on database integration and API endpoints.", status:"pending", feedback:"" },
-];
-
-const ReportsPage = ({ onNavigate, showToast }) => {
+const ReportsPage = ({ onNavigate, showToast, reports, onReportsChange }) => {
+  const { authFetch } = useAuth();
   const [reportType, setReportType] = useState("Weekly Report");
   const [content,    setContent]    = useState("");
-  const [prevReports, setPrevReports] = useState(INIT_PREV_REPORTS);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!content.trim()) { showToast("Please describe your activities before submitting.", "error"); return; }
-    const today = new Date().toISOString().slice(0,10);
-    setPrevReports(prev => [
-      { id: Date.now(), date: today, type: reportType.split(" ")[0].toLowerCase(), summary: content.trim(), status:"pending", feedback:"" },
-      ...prev,
-    ]);
-    setContent("");
-    showToast("Report submitted successfully!");
+    const apiType = REPORT_TYPE_TO_API[reportType] || "weekly";
+    try {
+      await authFetch("/reports", {
+        method: "POST",
+        body: JSON.stringify({ reportType: apiType, content: content.trim() }),
+      });
+      setContent("");
+      showToast("Report submitted successfully!");
+      const data = await authFetch("/reports/my");
+      onReportsChange(data.reports || []);
+    } catch (e) {
+      showToast(e.message, "error");
+    }
   };
 
-  const statusStyle = s => s === "reviewed"
-    ? { bg:"#15653a", c:"#fff" }
-    : { bg:"#e5e7eb", c:"#374151" };
+  const statusStyle = (s) =>
+    s === "reviewed"
+      ? { bg:"#15653a", c:"#fff" }
+      : { bg:"#e5e7eb", c:"#374151" };
+
+  const prevReports = (reports || []).map((r) => ({
+    id:       r._id,
+    date:     new Date(r.createdAt).toISOString().slice(0, 10),
+    type:     r.reportType,
+    summary:  r.content,
+    status:   r.status,
+    feedback: r.feedback || "",
+  }));
 
   return (
     <div className="fade-in">
@@ -1181,61 +1263,201 @@ const ReportsPage = ({ onNavigate, showToast }) => {
 /* ════════════════════════════════════════════════════════════════════
    STATUS
 ════════════════════════════════════════════════════════════════════ */
-const StatusPage = ({ onNavigate, internshipStarted, profile, user, reports, showToast }) => {
-  const approved  = reports.filter(r => r.status==="approved").length;
-  const submitted = reports.filter(r => r.status!=="draft").length;
+const REPORT_GOAL = 10;
+
+const StatusPage = ({
+  onNavigate,
+  internshipStarted,
+  profile,
+  user,
+  reports,
+  showToast,
+  myLetters,
+}) => {
+  const { authFetch } = useAuth();
+  const approved = reports.filter((r) => r.status === "approved" || r.status === "reviewed").length;
+  const submitted = reports.filter((r) => r.status !== "draft").length;
+  const repLen = Math.max(1, reports.length);
+  const company = profile?.companyName || "—";
+  const loc = profile?.companyLocation || "—";
+
+  const fmt = (d) =>
+    d
+      ? new Date(d).toLocaleDateString(undefined, {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : "—";
+
+  const letters = [...(myLetters || [])].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
+  const latestLetter = letters[0];
+  const approvedLetter = letters.find((l) => l.status === "approved");
+  const profileDone = !!profile?.isProfileComplete;
+  const hasPlacement = !!(profile?.companyName || letters.length > 0);
+  const letterRequested = letters.length > 0;
+  const letterPending = latestLetter?.status === "pending";
+  const letterRejected = latestLetter?.status === "rejected";
+  const letterApproved = !!approvedLetter;
+
+  const letterLine =
+    !letterRequested
+      ? "Browse opportunities and request an introduction letter."
+      : letterPending
+        ? "Waiting for an administrator to approve your letter."
+        : letterRejected
+          ? latestLetter?.adminNote?.trim() ||
+            "Your letter request was rejected — you can request again for another opportunity if allowed."
+          : letterApproved
+            ? "Your letter is approved. Download it from Home or below."
+            : "—";
+
+  const reportsLine = `You have submitted ${submitted} report${submitted === 1 ? "" : "s"}; ${approved} reviewed by your academic supervisor. Target: ${REPORT_GOAL} submissions.`;
+  const reportsMilestoneDone =
+    submitted >= REPORT_GOAL && approved >= REPORT_GOAL;
+  const latestReport = [...(reports || [])].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  )[0];
 
   const steps = [
-    { title:"Application Submitted",    desc:"Your application was received by the IMS portal.",               date:"Aug 15, 2024", done:true },
-    { title:"Document Verification",    desc:"Your academic credentials were verified.",                       date:"Aug 22, 2024", done:true },
-    { title:"Company Approval",         desc:"Tech Solutions Ltd accepted your internship placement.",         date:"Sep 1, 2024",  done:true },
-    { title:"Internship Letter Issued", desc:"Your official placement letter has been generated.",             date:"Sep 3, 2024",  done:true },
-    { title:"Internship In Progress",   desc:internshipStarted?"You are actively completing your internship.":"Toggle started status on the home page.", date:internshipStarted?"Active":"Pending", done:internshipStarted, active:!internshipStarted },
-    { title:"Final Report Submission",  desc:"Submit all weekly reports and your final internship report.",    date:"Dec 5, 2024",  done:submitted>=10 },
-    { title:"Internship Completed",     desc:"Supervisor sign-off and academic credit processed.",             date:"Dec 15, 2024", done:false },
+    {
+      title: "Profile complete",
+      desc: profileDone
+        ? "Your student profile is complete in the IMS portal."
+        : "Finish the profile wizard with your academic and contact details.",
+      date: fmt(profile?.updatedAt),
+      done: profileDone,
+      active: !profileDone,
+    },
+    {
+      title: "Internship letter",
+      desc: letterLine,
+      date: letterRequested ? fmt(latestLetter.createdAt) : "—",
+      done: letterApproved,
+      active:
+        (profileDone && !letterRequested) ||
+        letterPending ||
+        (!letterApproved && letterRejected),
+    },
+    {
+      title: "Placement on record",
+      desc: hasPlacement
+        ? `${company}${loc && loc !== "—" ? ` · ${loc}` : ""}`
+        : "Your employer appears here after you request a letter for an opportunity.",
+      date: hasPlacement ? fmt(latestLetter?.createdAt || profile?.updatedAt) : "—",
+      done: hasPlacement,
+      active: letterApproved && !hasPlacement,
+    },
+    {
+      title: "Internship in progress",
+      desc: internshipStarted
+        ? "You have marked your internship as started and your workplace supervisor can be involved."
+        : "When you begin your placement, mark internship as started on the Home page (requires an academic supervisor).",
+      date: internshipStarted ? fmt(profile?.internshipStartDate) : "Pending",
+      done: internshipStarted,
+      active: letterApproved && !internshipStarted,
+    },
+    {
+      title: "Internship reports",
+      desc: reportsLine,
+      date: latestReport?.createdAt ? fmt(latestReport.createdAt) : "—",
+      done: reportsMilestoneDone,
+      active: internshipStarted && !reportsMilestoneDone,
+    },
+    {
+      title: "Internship completed",
+      desc:
+        "Final sign-off and academic credit are handled by your department once requirements are met.",
+      date: profile?.internshipEndDate ? fmt(profile.internshipEndDate) : "—",
+      done: false,
+      active: reportsMilestoneDone && internshipStarted,
+    },
   ];
 
+  const placementBadgeClass = letterApproved
+    ? "bdk"
+    : letterPending
+      ? "ba"
+      : letterRejected
+        ? "br"
+        : hasPlacement
+          ? "ba"
+          : "bgr";
+  const placementBadgeLabel = letterApproved
+    ? "Letter approved"
+    : letterPending
+      ? "Letter pending"
+      : letterRejected
+        ? "Letter rejected"
+        : hasPlacement
+          ? "Placement set"
+          : "No placement yet";
+
   const meta = [
-    ["Student",    user?.name||"—",          GraduationCap, "#15653a"],
-    ["Department", profile.dept||"—",        BookOpen,      "#3b82f6"],
-    ["Student ID", profile.studentId||"—",   Hash,          "#8b5cf6"],
-    ["Reports OK", `${approved}/${reports.length}`, FileText,"#16a34a"],
-    ["Progress",   `${Math.round((submitted/reports.length)*100)}%`, TrendingUp,"#f59e0b"],
-    ["Status",     internshipStarted?"Active":"Not Started", Zap, internshipStarted?"#15653a":"#9ca3af"],
+    ["Student", user?.name || "—", GraduationCap, "#15653a"],
+    ["Department", profile?.dept || "—", BookOpen, "#3b82f6"],
+    ["Student ID", profile?.studentId || "—", Hash, "#8b5cf6"],
+    ["Reports OK", `${approved}/${Math.max(reports.length, 1)}`, FileText, "#16a34a"],
+    ["Progress", `${Math.round((submitted / repLen) * 100)}%`, TrendingUp, "#f59e0b"],
+    ["Letter", letterApproved ? "Approved" : letterPending ? "Pending" : letterRejected ? "Rejected" : "—", Clock, "#9333ea"],
   ];
+
+  const handleDownloadLetter = async () => {
+    if (!approvedLetter?._id) {
+      showToast("Your letter is not approved yet.", "error");
+      return;
+    }
+    try {
+      const data = await authFetch(`/letters/${approvedLetter._id}/download`);
+      generateInternshipLetter(data.letter, knustLogo);
+      showToast("Letter opened — use Ctrl+P to save as PDF");
+    } catch (e) {
+      showToast(e.message, "error");
+    }
+  };
 
   return (
     <div className="fade-in">
-      <button className="back-btn" onClick={() => onNavigate("home")}><Ic icon={ArrowLeft} size={14} />Back</button>
+      <button className="back-btn" onClick={() => onNavigate("home")}>
+        <Ic icon={ArrowLeft} size={14} />Back
+      </button>
 
       <div className="section-row" style={{ marginBottom:20 }}>
         <div>
           <h2 style={{ fontSize:20, fontWeight:800, color:"#111827" }}>Application Status</h2>
-          <p style={{ fontSize:13, color:"#6b7280", marginTop:3 }}>Track every stage of your internship placement</p>
+          <p style={{ fontSize:13, color:"#6b7280", marginTop:3 }}>
+            Live view of your profile, letter, and reports
+          </p>
         </div>
       </div>
 
-      {/* Placement summary */}
       <div className="card fade-1" style={{ marginBottom:16 }}>
         <div className="card-body">
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
             <p className="card-title" style={{ margin:0 }}>Placement Summary</p>
-            <span className="badge bdk"><Ic icon={CheckCircle} size={10} color="#fff" />Approved</span>
+            <span className={`badge ${placementBadgeClass}`} style={{ display:"inline-flex", alignItems:"center", gap:5 }}>
+              {letterApproved && <Ic icon={CheckCircle} size={10} color="#fff" />}
+              {placementBadgeLabel}
+            </span>
           </div>
           <div style={{ display:"flex", gap:14, alignItems:"center", marginBottom:18, flexWrap:"wrap" }}>
             <div style={{ width:46, height:46, borderRadius:12, background:"rgba(21,101,58,.1)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <Ic icon={Building2} size={22} color="#15653a" />
             </div>
             <div>
-              <p style={{ fontSize:16, fontWeight:700, color:"#111827" }}>Tech Solutions Ltd</p>
-              <p style={{ fontSize:13, color:"#6b7280" }}>Lagos, Nigeria · 6 Months</p>
+              <p style={{ fontSize:16, fontWeight:700, color:"#111827" }}>{company}</p>
+              <p style={{ fontSize:13, color:"#6b7280" }}>{loc}</p>
             </div>
           </div>
           <div className="status-sg" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
-            {meta.map(([l,v,Icon,c]) => (
+            {meta.map(([l, v, Icon, c]) => (
               <div key={l} style={{ background:"#f9fafb", border:"1px solid #f3f4f6", borderRadius:10, padding:"12px 14px" }}>
                 <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:6 }}>
-                  <div style={{ width:24, height:24, borderRadius:6, background:c+"18", display:"flex", alignItems:"center", justifyContent:"center" }}><Ic icon={Icon} size={12} color={c} /></div>
+                  <div style={{ width:24, height:24, borderRadius:6, background:c + "18", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    <Ic icon={Icon} size={12} color={c} />
+                  </div>
                   <p style={{ fontSize:10, color:"#9ca3af", textTransform:"uppercase", letterSpacing:".05em", fontWeight:700 }}>{l}</p>
                 </div>
                 <p style={{ fontSize:13, fontWeight:700, color:"#111827" }}>{v}</p>
@@ -1245,34 +1467,42 @@ const StatusPage = ({ onNavigate, internshipStarted, profile, user, reports, sho
         </div>
       </div>
 
-      {/* Progress bar */}
       <div className="card fade-2" style={{ marginBottom:16 }}>
         <div className="card-body">
           <div style={{ display:"flex", justifyContent:"space-between", marginBottom:10 }}>
             <p className="card-title" style={{ margin:0 }}>Overall Progress</p>
-            <span style={{ fontSize:14, fontWeight:800, color:"#15653a" }}>{Math.round((submitted/reports.length)*100)}%</span>
+            <span style={{ fontSize:14, fontWeight:800, color:"#15653a" }}>{Math.round((submitted / repLen) * 100)}%</span>
           </div>
-          <div className="prog-track" style={{ height:10, marginBottom:8 }}><div className="prog-fill" style={{ width:`${(submitted/reports.length)*100}%` }} /></div>
-          <p style={{ fontSize:12, color:"#9ca3af" }}>{submitted} of {reports.length} weekly reports submitted · {approved} approved</p>
+          <div className="prog-track" style={{ height:10, marginBottom:8 }}>
+            <div className="prog-fill" style={{ width:`${Math.min(100, Math.round((submitted / repLen) * 100))}%` }} />
+          </div>
+          <p style={{ fontSize:12, color:"#9ca3af" }}>
+            {submitted} report{submitted === 1 ? "" : "s"} on file · {approved} reviewed · goal {REPORT_GOAL} submissions
+          </p>
         </div>
       </div>
 
-      {/* Timeline */}
       <div className="card fade-3">
         <div className="card-body">
           <p className="card-title">Placement Timeline</p>
           <div className="timeline">
             {steps.map((s, i) => (
-              <div key={i} className="tl-step">
-                {i < steps.length-1 && <div className={`tl-line${s.done?" done":""}`} />}
-                <div className={`tl-dot${s.done?" done":s.active?" active":""}`}>
-                  {s.done ? <Ic icon={Check} size={13} color="#fff" /> : s.active ? <div style={{ width:8,height:8,borderRadius:"50%",background:"#15653a" }}/> : <div style={{ width:8,height:8,borderRadius:"50%",background:"#e5e7eb" }}/>}
+              <div key={s.title} className="tl-step">
+                {i < steps.length - 1 && <div className={`tl-line${s.done ? " done" : ""}`} />}
+                <div className={`tl-dot${s.done ? " done" : s.active ? " active" : ""}`}>
+                  {s.done ? (
+                    <Ic icon={Check} size={13} color="#fff" />
+                  ) : s.active ? (
+                    <div style={{ width:8, height:8, borderRadius:"50%", background:"#15653a" }} />
+                  ) : (
+                    <div style={{ width:8, height:8, borderRadius:"50%", background:"#e5e7eb" }} />
+                  )}
                 </div>
                 <div style={{ paddingTop:3, flex:1 }}>
                   <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
-                    <p style={{ fontSize:14, fontWeight:700, color:s.done||s.active?"#111827":"#9ca3af" }}>{s.title}</p>
-                    {s.done   && <span className="badge bg"  style={{ fontSize:9, padding:"2px 7px" }}>Done</span>}
-                    {s.active && <span className="badge ba"  style={{ fontSize:9, padding:"2px 7px" }}>In Progress</span>}
+                    <p style={{ fontSize:14, fontWeight:700, color:s.done || s.active ? "#111827" : "#9ca3af" }}>{s.title}</p>
+                    {s.done && <span className="badge bg" style={{ fontSize:9, padding:"2px 7px" }}>Done</span>}
+                    {s.active && !s.done && <span className="badge ba" style={{ fontSize:9, padding:"2px 7px" }}>In progress</span>}
                   </div>
                   <p style={{ fontSize:12, color:"#6b7280", marginTop:2 }}>{s.desc}</p>
                   <p style={{ fontSize:11, color:"#9ca3af", marginTop:3 }}>{s.date}</p>
@@ -1281,8 +1511,15 @@ const StatusPage = ({ onNavigate, internshipStarted, profile, user, reports, sho
             ))}
           </div>
           <div className="divider" />
-          <button className="btn-p" style={{ width:"100%", padding:"11px" }} onClick={() => showToast("Placement letter downloaded!")}>
-            <Ic icon={Download} size={15} />Download Placement Letter
+          <button
+            type="button"
+            className="btn-p"
+            style={{ width:"100%", padding:"11px", opacity: letterApproved ? 1 : 0.55 }}
+            disabled={!letterApproved}
+            onClick={handleDownloadLetter}
+          >
+            <Ic icon={Download} size={15} />
+            Download placement letter
           </button>
         </div>
       </div>
@@ -1294,76 +1531,183 @@ const StatusPage = ({ onNavigate, internshipStarted, profile, user, reports, sho
    ROOT
 ════════════════════════════════════════════════════════════════════ */
 export default function StudentDashboard() {
-  const { user, logout, authFetch }         = useAuth();
-  const navigate                 = useNavigate();
-  const [page,    setPage]       = useState("home");
-  const [profile, setProfile]    = useState(null);
-  const [started, setStarted]    = useState(false);
-  const [reports]                = useState(INIT_REPORTS);
-  const [applied, setApplied]    = useState([]);
+  const { user, logout, authFetch } = useAuth();
+  const navigate = useNavigate();
+  const [page, setPage] = useState("home");
+  const [profile, setProfile] = useState(undefined);
+  const [started, setStarted] = useState(false);
+  const [reports, setReports] = useState([]);
+  const [appliedOppIds, setAppliedOppIds] = useState([]);
+  const [myLetters, setMyLetters] = useState([]);
 
-  // Single global toast — lives here so it always renders ABOVE the navbar
-  const [gToast, showToast]      = useToast();
+  const [gToast, showToast] = useToast();
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await authFetch("/student/profile");
+        if (cancelled) return;
+        const p = normalizeStudentProfile(data.profile);
+        setProfile(p);
+        setStarted(!!p.internshipStarted);
+      } catch {
+        if (!cancelled) setProfile(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [authFetch]);
+
+  const refreshLetters = useCallback(async () => {
+    try {
+      const data = await authFetch("/letters/my");
+      const letters = data.letters || [];
+      setMyLetters(letters);
+      const ids = letters
+        .map((l) => l.opportunity?._id || l.opportunity)
+        .filter(Boolean)
+        .map(String);
+      setAppliedOppIds([...new Set(ids)]);
+    } catch {
+      /* ignore */
+    }
+  }, [authFetch]);
+
+  const refreshReports = useCallback(async () => {
+    try {
+      const data = await authFetch("/reports/my");
+      setReports(data.reports || []);
+    } catch {
+      /* ignore */
+    }
+  }, [authFetch]);
+
+  useEffect(() => {
+    if (!profile?.isProfileComplete) return;
+    refreshLetters();
+    refreshReports();
+  }, [profile?.isProfileComplete, refreshLetters, refreshReports]);
+
+  const reportsUi = (reports || []).map((r) => ({
+    ...r,
+    id: r._id,
+    status: r.status === "reviewed" ? "approved" : r.status,
+  }));
+
+  const approvedLetter = myLetters.find((l) => l.status === "approved");
+  const latestLetter   = myLetters[0];
+  const letterStatusLabel =
+    approvedLetter ? "Approved"
+      : latestLetter?.status === "pending" ? "Pending"
+        : latestLetter?.status === "rejected" ? "Rejected"
+          : "No request";
 
   const handleLogout = () => { logout?.(); navigate("/login"); };
   const displayName = user?.name || "Student";
-  const initials    = displayName.split(" ").map(w => w[0]).slice(0,2).join("").toUpperCase();
+  const initials = displayName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+
+  const showShell = profile !== undefined && profile?.isProfileComplete;
 
   return (
     <>
       <style>{css}</style>
       <div className="app-shell">
 
-        {/* ── Global toast: position:fixed z-index 99999, always visible above nav ── */}
         {gToast && <ToastEl key={gToast.key} msg={gToast.msg} type={gToast.type} />}
 
-        {/* Profile wizard */}
-       {!profile && (
-  <ProfileWizard
-    user={user}
-    onComplete={async (formData) => {
-      try {
-        const data = await authFetch("/student/profile", {
-          method: "PUT",
-          body: JSON.stringify(formData),
-        });
-        setProfile(data.profile);
-      } catch (err) {
-        showToast(err.message, "error");
-      }
-    }}
-  />
-)}
-
-        {/* Navbar */}
-        <nav className="topnav">
-          <div className="topnav-brand">
-            <div style={{ width:32, height:32, borderRadius:8, background:"rgba(255,255,255,.15)", border:"1px solid rgba(255,255,255,.2)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-              <Ic icon={GraduationCap} size={17} color="#fff" />
-            </div>
-            <div>
-              <p className="topnav-logo">Student Dashboard</p>
-              <p className="topnav-sub">IMS Portal</p>
-            </div>
+        {profile === undefined && (
+          <div className="page-wrap" style={{ paddingTop: 48, textAlign: "center", color: "#6b7280" }}>
+            Loading your profile…
           </div>
-          <div className="topnav-right">
-            <div className="user-pill">
-              <div className="user-avatar">{initials}</div>
-              <span className="user-name">{displayName}</span>
-            </div>
-            <button className="topnav-logout" onClick={handleLogout}>
-              <Ic icon={LogOut} size={14} color="#fff" /><span className="lbl">Logout</span>
-            </button>
-          </div>
-        </nav>
+        )}
 
-        {/* Pages — each receives showToast, no local toast state */}
-        <div className="page-wrap">
-          {profile && page === "home"    && <HomePage    user={user} profile={profile} onNavigate={setPage} internshipStarted={started} setInternshipStarted={setStarted} reports={reports} appliedCount={applied.length} showToast={showToast} />}
-          {profile && page === "opps"    && <OppsPage    onNavigate={setPage} applied={applied} setApplied={setApplied} showToast={showToast} />}
-          {profile && page === "reports" && <ReportsPage onNavigate={setPage} showToast={showToast} />}
-          {profile && page === "status"  && <StatusPage  onNavigate={setPage} internshipStarted={started} profile={profile} user={user} reports={reports} showToast={showToast} />}
-        </div>
+        {profile !== undefined && !profile?.isProfileComplete && (
+          <ProfileWizard
+            user={user}
+            onComplete={async (formData) => {
+              try {
+                const data = await authFetch("/student/profile", {
+                  method: "PUT",
+                  body: JSON.stringify(formData),
+                });
+                setProfile(normalizeStudentProfile(data.profile));
+              } catch (err) {
+                showToast(err.message, "error");
+              }
+            }}
+          />
+        )}
+
+        {showShell && (
+          <nav className="topnav">
+            <div className="topnav-brand">
+              <div style={{ width:32, height:32, borderRadius:8, background:"rgba(255,255,255,.15)", border:"1px solid rgba(255,255,255,.2)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <Ic icon={GraduationCap} size={17} color="#fff" />
+              </div>
+              <div>
+                <p className="topnav-logo">Student Dashboard</p>
+                <p className="topnav-sub">IMS Portal</p>
+              </div>
+            </div>
+            <div className="topnav-right">
+              <div className="user-pill">
+                <div className="user-avatar">{initials}</div>
+                <span className="user-name">{displayName}</span>
+              </div>
+              <button className="topnav-logout" onClick={handleLogout}>
+                <Ic icon={LogOut} size={14} color="#fff" /><span className="lbl">Logout</span>
+              </button>
+            </div>
+          </nav>
+        )}
+
+        {showShell && (
+          <div className="page-wrap">
+            {page === "home" && (
+              <HomePage
+                user={user}
+                profile={profile}
+                onNavigate={setPage}
+                internshipStarted={started}
+                setInternshipStarted={setStarted}
+                reports={reportsUi}
+                appliedCount={appliedOppIds.length}
+                showToast={showToast}
+                approvedLetterMongoId={approvedLetter?._id}
+                letterStatusLabel={letterStatusLabel}
+                onProfileRefresh={(p) => setProfile(normalizeStudentProfile(p))}
+              />
+            )}
+            {page === "opps" && (
+              <OppsPage
+                onNavigate={setPage}
+                appliedIds={appliedOppIds}
+                setAppliedIds={setAppliedOppIds}
+                showToast={showToast}
+                onAfterLetterRequest={refreshLetters}
+              />
+            )}
+            {page === "reports" && (
+              <ReportsPage
+                onNavigate={setPage}
+                showToast={showToast}
+                reports={reports}
+                onReportsChange={setReports}
+              />
+            )}
+            {page === "status" && (
+              <StatusPage
+                onNavigate={setPage}
+                internshipStarted={started}
+                profile={profile}
+                user={user}
+                reports={reportsUi}
+                showToast={showToast}
+                myLetters={myLetters}
+              />
+            )}
+          </div>
+        )}
       </div>
     </>
   );

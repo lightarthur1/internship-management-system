@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../Context/AuthContext";
 
 // ─── Design Tokens ────────────────────────────────────────────────────────
 const C = {
@@ -71,10 +73,19 @@ function SupervisorReportModal({ intern, existingReport, onSave, onClose }) {
   const ratingColors = { "1": "#d32f2f", "2": C.ember, "3": "#f9a825", "4": "#388e3c", "5": C.forest };
   const starIcons = { "1": "★", "2": "★★", "3": "★★★", "4": "★★★★", "5": "★★★★★" };
 
-  const handleSave = () => {
-    onSave({ ...form, internId: intern.id, internName: intern.name, createdAt: new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) });
-    setSaved(true);
-    setTimeout(() => { setSaved(false); onClose(); }, 1200);
+  const handleSave = async () => {
+    try {
+      await onSave({
+        ...form,
+        internId: intern.id,
+        internName: intern.name,
+        createdAt: new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
+      });
+      setSaved(true);
+      setTimeout(() => { setSaved(false); onClose(); }, 1200);
+    } catch {
+      setSaved(false);
+    }
   };
 
   const fields = [
@@ -837,28 +848,103 @@ function ReportsScreen({ reports, interns, filterStatus }) {
   );
 }
 
-// ─── Data ─────────────────────────────────────────────────────────────────
-const INTERNS = [
-  { id: "2024001", name: "John Doe", course: "Computer Science", university: "State University", start: "2/1/2026", end: "7/31/2026", department: "Software Engineering", email: "john.doe@stateuniversity.edu" },
-  { id: "2024006", name: "Alice Cooper", course: "Software Engineering", university: "Tech University", start: "2/15/2026", end: "8/15/2026", department: "Product & Design", email: "alice.cooper@techuniversity.edu" },
-];
-
-const REPORTS = [
-  { id: "RPT-2024001-001", internId: "2024001", month: "February 2026", status: "submitted", submittedOn: "Mar 1, 2026" },
-  { id: "RPT-2024006-001", internId: "2024006", month: "February 2026", status: "pending", submittedOn: null },
-];
-
-// ─── Root ─────────────────────────────────────────────────────────────────
-export default function App() {
-  const [supervisor, setSupervisor] = useState(null);
+// ─── Root (API) ────────────────────────────────────────────────────────────
+export default function WorkplaceSupervisorDashboard() {
+  const { user, logout, authFetch } = useAuth();
+  const routerNavigate = useNavigate();
   const [page, setPage] = useState("dashboard");
   const [selectedIntern, setSelectedIntern] = useState(null);
   const [prevPage, setPrevPage] = useState(null);
-  // supervisorReports: { [internId]: reportObject }
   const [supervisorReports, setSupervisorReports] = useState({});
   const [reportModalIntern, setReportModalIntern] = useState(null);
+  const [interns, setInterns] = useState([]);
+  const [wsReports, setWsReports] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  if (!supervisor) return <Onboarding onComplete={setSupervisor} />;
+  const supervisor = {
+    name: user?.name || "Supervisor",
+    company: "Workplace",
+    email: user?.email || "",
+  };
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [internRes, evalRes] = await Promise.all([
+        authFetch("/workplace-supervisor/interns"),
+        authFetch("/evaluations/my-interns"),
+      ]);
+      const internProfiles = internRes.interns || [];
+      const mappedInterns = internProfiles.map((p) => ({
+        id: String(p.user?._id || p.user),
+        name: p.user?.name || "—",
+        course: p.department || "Student",
+        university: "KNUST",
+        start: p.internshipStartDate
+          ? new Date(p.internshipStartDate).toLocaleDateString()
+          : "—",
+        end: p.internshipEndDate
+          ? new Date(p.internshipEndDate).toLocaleDateString()
+          : "—",
+        department: p.department || "",
+        email: p.user?.email || "",
+      }));
+
+      const evalMap = {};
+      (evalRes.evaluations || []).forEach((ev) => {
+        const sid = String(ev.student?._id || ev.student);
+        evalMap[sid] = {
+          period: ev.period || "",
+          attendance: ev.attendance || "",
+          performance: ev.performance || "",
+          skills: ev.skills || "",
+          attitude: ev.attitude || "",
+          achievements: ev.achievements || "",
+          challenges: ev.challenges || "",
+          recommendation: ev.recommendation || "",
+          comments: ev.comments || "",
+          rating: String(ev.rating ?? "3"),
+          createdAt: new Date(ev.updatedAt).toLocaleDateString(),
+        };
+      });
+
+      const flat = [];
+      await Promise.all(
+        mappedInterns.map(async (intern) => {
+          try {
+            const rep = await authFetch(
+              `/workplace-supervisor/interns/${intern.id}/reports`
+            );
+            (rep.reports || []).forEach((r) => {
+              flat.push({
+                id: r._id,
+                internId: intern.id,
+                month: `${r.reportType} · ${new Date(r.createdAt).toLocaleDateString()}`,
+                status: r.status === "reviewed" ? "submitted" : "pending",
+                submittedOn:
+                  r.status === "reviewed"
+                    ? new Date(r.reviewedAt || r.createdAt).toLocaleDateString()
+                    : null,
+              });
+            });
+          } catch {
+            /* ignore per-intern errors */
+          }
+        })
+      );
+
+      setInterns(mappedInterns);
+      setSupervisorReports(evalMap);
+      setWsReports(flat);
+    } catch {
+      setInterns([]);
+      setWsReports([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [authFetch]);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const navigate = (p, data) => {
     setPrevPage(page);
@@ -867,26 +953,77 @@ export default function App() {
   };
 
   const goBack = (mode) => {
-    if (mode === "parent" && prevPage) { setPage(prevPage); return; }
+    if (mode === "parent" && prevPage) {
+      setPage(prevPage);
+      return;
+    }
     setPage("dashboard");
   };
 
   const openReportModal = (intern) => setReportModalIntern(intern);
   const closeReportModal = () => setReportModalIntern(null);
 
-  const saveReport = (reportData) => {
-    setSupervisorReports(prev => ({ ...prev, [reportData.internId]: reportData }));
+  const saveReport = async (reportData) => {
+    await authFetch("/evaluations", {
+      method: "POST",
+      body: JSON.stringify({
+        studentId: reportData.internId,
+        period: reportData.period,
+        attendance: reportData.attendance,
+        performance: reportData.performance,
+        skills: reportData.skills,
+        attitude: reportData.attitude,
+        achievements: reportData.achievements,
+        challenges: reportData.challenges,
+        recommendation: reportData.recommendation,
+        comments: reportData.comments,
+        rating: Number(reportData.rating) || 3,
+      }),
+    });
+    setSupervisorReports((prev) => ({
+      ...prev,
+      [reportData.internId]: {
+        period: reportData.period,
+        attendance: reportData.attendance,
+        performance: reportData.performance,
+        skills: reportData.skills,
+        attitude: reportData.attitude,
+        achievements: reportData.achievements,
+        challenges: reportData.challenges,
+        recommendation: reportData.recommendation,
+        comments: reportData.comments,
+        rating: String(reportData.rating),
+        createdAt: new Date().toLocaleDateString(),
+      },
+    }));
+    await loadData();
   };
+
+  if (loading) {
+    return (
+      <div style={{ fontFamily: "'DM Sans','Segoe UI',sans-serif", background: C.sage, minHeight: "100vh", padding: 40, textAlign: "center", color: C.muted }}>
+        Loading workplace dashboard…
+      </div>
+    );
+  }
 
   return (
     <div style={{ fontFamily: "'DM Sans','Segoe UI',sans-serif", background: C.sage, minHeight: "100vh", color: C.text, overflowX: "hidden" }}>
-      <Navbar page={page} onBack={goBack} onLogout={() => { setSupervisor(null); setPage("dashboard"); }} breadcrumb={page === "internDetail" ? { parent: "All Interns" } : null} />
+      <Navbar
+        page={page}
+        onBack={goBack}
+        onLogout={() => {
+          logout?.();
+          routerNavigate("/login");
+        }}
+        breadcrumb={page === "internDetail" ? { parent: "All Interns" } : null}
+      />
 
       {page === "dashboard" && (
         <Dashboard
           supervisor={supervisor}
-          interns={INTERNS}
-          reports={REPORTS}
+          interns={interns}
+          reports={wsReports}
           supervisorReports={supervisorReports}
           onNav={navigate}
           onWriteReport={openReportModal}
@@ -894,25 +1031,28 @@ export default function App() {
       )}
       {page === "interns" && (
         <InternsScreen
-          interns={INTERNS}
-          reports={REPORTS}
+          interns={interns}
+          reports={wsReports}
           supervisorReports={supervisorReports}
-          onDetail={i => navigate("internDetail", i)}
+          onDetail={(i) => navigate("internDetail", i)}
           onWriteReport={openReportModal}
         />
       )}
-      {page === "submitted" && <ReportsScreen reports={REPORTS} interns={INTERNS} filterStatus="submitted" />}
-      {page === "pending" && <ReportsScreen reports={REPORTS} interns={INTERNS} filterStatus="pending" />}
+      {page === "submitted" && (
+        <ReportsScreen reports={wsReports} interns={interns} filterStatus="submitted" />
+      )}
+      {page === "pending" && (
+        <ReportsScreen reports={wsReports} interns={interns} filterStatus="pending" />
+      )}
       {page === "internDetail" && selectedIntern && (
         <InternDetail
           intern={selectedIntern}
-          reports={REPORTS}
+          reports={wsReports}
           supervisorReport={supervisorReports[selectedIntern.id]}
           onWriteReport={() => openReportModal(selectedIntern)}
         />
       )}
 
-      {/* Supervisor Report Modal */}
       {reportModalIntern && (
         <SupervisorReportModal
           intern={reportModalIntern}

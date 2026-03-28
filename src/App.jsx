@@ -14,6 +14,7 @@ import { BrowserRouter,Route,Routes,Navigate } from 'react-router-dom';
 import DashboardRedirect from './Components/DashboardRedirect';
 import { AuthProvider, useAuth } from './Context/AuthContext';
 import ViewReports from './Components/ViewReports';
+import AcceptInvite from './Pages/AcceptInvite';
 const App = () => {
   return (
     <AuthProvider>
@@ -22,6 +23,7 @@ const App = () => {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/accept-invite" element={<AcceptInvite />} />
           <Route path="/dashboard" element={<DashboardRedirect />} />
           
           {/* Protected Routes */}

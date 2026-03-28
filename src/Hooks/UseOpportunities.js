@@ -52,7 +52,7 @@ export default function useOpportunities() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [authFetch]);
 
   useEffect(() => { fetchOpportunities(); }, [fetchOpportunities]);
 
@@ -62,6 +62,19 @@ export default function useOpportunities() {
     setDeleteTargetId(null);
     setForm(EMPTY_FORM);
   };
+
+  const opportunityApiBody = (f) => ({
+    companyName: f.company?.trim(),
+    companyEmoji: f.companyEmoji,
+    location: f.location,
+    description: f.description,
+    positions: Number(f.positions),
+    duration: f.duration,
+    type: f.type,
+    stipend: f.stipend || undefined,
+    roles: f.roles || [],
+    skills: f.skills || [],
+  });
 
   const openAdd = () => {
     setForm(EMPTY_FORM);
@@ -92,11 +105,7 @@ export default function useOpportunities() {
     try {
       const data = await authFetch("/admin/opportunities", {
         method: "POST",
-        body: JSON.stringify({
-          ...form,
-          companyName: form.company,        // ← map to backend field
-          positions:   Number(form.positions),
-        }),
+        body: JSON.stringify(opportunityApiBody(form)),
       });
       const o = data.opportunity;
       setOpportunities((prev) => [
@@ -128,11 +137,7 @@ export default function useOpportunities() {
     try {
       const data = await authFetch(`/admin/opportunities/${editTargetId}`, {
         method: "PUT",
-        body: JSON.stringify({
-          ...form,
-          companyName: form.company,        // ← map to backend field
-          positions:   Number(form.positions),
-        }),
+        body: JSON.stringify(opportunityApiBody(form)),
       });
       const o = data.opportunity;
       setOpportunities((prev) =>

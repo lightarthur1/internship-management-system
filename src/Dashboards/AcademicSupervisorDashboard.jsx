@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 import {
@@ -254,36 +254,28 @@ const useToast = () => {
   return [t, show];
 };
 
-/* ── Static demo data (replace with authFetch calls) ──────────── */
-const DEMO_SUPERVISOR = {
-  name: "Dr. Sarah Williams",
-  department: "Computer Science",
-  email: "sarah.w@university.edu",
-  staffId: "STAFF-2021-004",
-};
-
-const DEMO_STUDENTS = [
-  { id: "s1", name: "John Doe",     studentId: "200455544", dept: "Computer Science",  level: "300 Level", company: "Tech Solutions Ltd",      location: "Accra, Ghana",     started: true,  reports: 3, pending: 1, evaluationRating: 4 },
-  { id: "s2", name: "Emily Brown",  studentId: "200455545", dept: "Computer Science",  level: "300 Level", company: "Digital Marketing Pro",   location: "Accra, Ghana",     started: true,  reports: 2, pending: 2, evaluationRating: null },
-  { id: "s3", name: "David Wilson", studentId: "200455546", dept: "Computer Science",  level: "400 Level", company: "Software Incorporated",   location: "Kumasi, Ghana",    started: false, reports: 2, pending: 3, evaluationRating: 3 },
-];
-
-const DEMO_REPORTS = [
-  { id: "r1", studentId: "s1", studentName: "John Doe",    type: "weekly",   content: "Completed company orientation, set up dev environment.", date: "Sep 9, 2024",  status: "pending",  feedback: "" },
-  { id: "r2", studentId: "s2", studentName: "Emily Brown", type: "weekly",   content: "Worked on the frontend dashboard using React components.",  date: "Sep 10, 2024", status: "pending",  feedback: "" },
-  { id: "r3", studentId: "s3", studentName: "David Wilson",type: "monthly",  content: "Completed database design module and API integration.",      date: "Sep 5, 2024",  status: "reviewed", feedback: "Good progress, keep it up!" },
-  { id: "r4", studentId: "s1", studentName: "John Doe",    type: "weekly",   content: "Built reusable UI components, implemented responsive layout.", date: "Sep 16, 2024", status: "reviewed", feedback: "Well documented." },
-];
-
 /* ════════════════════════════════════════════════════════════════
    HOME PAGE
 ════════════════════════════════════════════════════════════════ */
-const HomePage = ({ user, onNavigate, showToast }) => {
-  const supervisor = DEMO_SUPERVISOR;
-  const totalStudents  = DEMO_STUDENTS.length;
-  const pendingReports = DEMO_REPORTS.filter(r => r.status === "pending").length;
-  const totalReports   = DEMO_REPORTS.length;
+const HomePage = ({ user, onNavigate, showToast, students, reports, loading }) => {
+  const supervisor = {
+    name: user?.name || "Academic Supervisor",
+    department: "Faculty",
+    email: user?.email || "—",
+    staffId: "—",
+  };
+  const totalStudents  = students.length;
+  const pendingReports = reports.filter((r) => r.status === "pending").length;
+  const totalReports   = reports.length;
   const initials = (user?.name || "AS").split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
+
+  if (loading) {
+    return (
+      <div className="fade-in page-wrap" style={{ paddingTop: 40, textAlign: "center", color: "#6b7280" }}>
+        Loading dashboard…
+      </div>
+    );
+  }
 
   return (
     <div className="fade-in">
@@ -362,7 +354,7 @@ const HomePage = ({ user, onNavigate, showToast }) => {
               <p className="card-title" style={{ margin:0 }}>Pending Reviews</p>
               <button className="btn-og" onClick={() => onNavigate("reports")}>View All</button>
             </div>
-            {DEMO_REPORTS.filter(r => r.status === "pending").slice(0, 3).map((r, i) => (
+            {reports.filter((r) => r.status === "pending").slice(0, 3).map((r, i) => (
               <div key={r.id} className="report-row">
                 <div style={{ width:38, height:38, borderRadius:10, background:"#fef9c3", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                   <Ic icon={Clock} size={16} color="#a16207" />
@@ -386,11 +378,11 @@ const HomePage = ({ user, onNavigate, showToast }) => {
 /* ════════════════════════════════════════════════════════════════
    STUDENTS PAGE
 ════════════════════════════════════════════════════════════════ */
-const StudentsPage = ({ onNavigate, showToast }) => {
+const StudentsPage = ({ onNavigate, showToast, students, onOpenStudentReports }) => {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
 
-  const filtered = DEMO_STUDENTS.filter(s => {
+  const filtered = students.filter((s) => {
     const q = search.toLowerCase();
     return !q || s.name.toLowerCase().includes(q) || s.company.toLowerCase().includes(q) || s.dept.toLowerCase().includes(q);
   });
@@ -436,9 +428,24 @@ const StudentsPage = ({ onNavigate, showToast }) => {
                 <p style={{ fontSize:11, color:"#9ca3af", marginBottom:4 }}>Reports Submitted</p>
                 <p style={{ fontSize:13, fontWeight:700, color:"#111827" }}>{s.reports}</p>
               </div>
-              <button className="btn-og" style={{ fontSize:12, padding:"7px 14px" }} onClick={() => setSelected(s)}>
-                <Ic icon={Eye} size={13} />View Reports
-              </button>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:8, justifyContent:"flex-end" }}>
+                <button
+                  type="button"
+                  className="btn-g"
+                  style={{ fontSize:12, padding:"7px 12px" }}
+                  onClick={() => setSelected(s)}
+                >
+                  Summary
+                </button>
+                <button
+                  type="button"
+                  className="btn-og"
+                  style={{ fontSize:12, padding:"7px 14px" }}
+                  onClick={() => onOpenStudentReports?.(s.id)}
+                >
+                  <Ic icon={Eye} size={13} />View Reports
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -469,7 +476,16 @@ const StudentsPage = ({ onNavigate, showToast }) => {
             </div>
             <div style={{ display:"flex", gap:10 }}>
               <button className="btn-g" style={{ flex:1 }} onClick={() => setSelected(null)}>Close</button>
-              <button className="btn-p" style={{ flex:2 }} onClick={() => { setSelected(null); onNavigate("reports"); }}>
+              <button
+                type="button"
+                className="btn-p"
+                style={{ flex:2 }}
+                onClick={() => {
+                  const id = selected?.id;
+                  setSelected(null);
+                  if (id) onOpenStudentReports?.(id);
+                }}
+              >
                 <Ic icon={FileText} size={14} />View Their Reports
               </button>
             </div>
@@ -483,20 +499,28 @@ const StudentsPage = ({ onNavigate, showToast }) => {
 /* ════════════════════════════════════════════════════════════════
    REPORTS PAGE
 ════════════════════════════════════════════════════════════════ */
-const ReportsPage = ({ onNavigate, showToast }) => {
+const ReportsPage = ({ onNavigate, showToast, reports, onRefreshReports }) => {
+  const { authFetch } = useAuth();
   const [filter,   setFilter]   = useState("all");
-  const [reports,  setReports]  = useState(DEMO_REPORTS);
   const [feedback, setFeedback] = useState({});
   const [expanded, setExpanded] = useState(null);
 
-  const filtered = reports.filter(r => filter === "all" ? true : r.status === filter);
+  const filtered = reports.filter((r) => (filter === "all" ? true : r.status === filter));
 
-  const submitFeedback = (reportId) => {
+  const submitFeedback = async (reportId) => {
     const fb = feedback[reportId]?.trim();
     if (!fb) { showToast("Please write feedback before submitting.", "error"); return; }
-    setReports(prev => prev.map(r => r.id === reportId ? { ...r, status:"reviewed", feedback: fb } : r));
-    showToast("Feedback submitted!");
-    setExpanded(null);
+    try {
+      await authFetch(`/reports/${reportId}/review`, {
+        method: "PUT",
+        body: JSON.stringify({ feedback: fb }),
+      });
+      showToast("Feedback submitted!");
+      setExpanded(null);
+      await onRefreshReports?.();
+    } catch (e) {
+      showToast(e.message, "error");
+    }
   };
 
   return (
@@ -577,12 +601,7 @@ const ReportsPage = ({ onNavigate, showToast }) => {
 /* ════════════════════════════════════════════════════════════════
    EVALUATIONS PAGE — workplace supervisor reports about students
 ════════════════════════════════════════════════════════════════ */
-const DEMO_EVALUATIONS = [
-  { id:"e1", studentName:"John Doe",    studentId:"200455544", company:"Tech Solutions Ltd",    rating:4, period:"Feb–Mar 2026", updatedAt:"Mar 15, 2026", performance:"Excellent work on React components.", recommendation:"Strongly recommended for full-time hire." },
-  { id:"e2", studentName:"David Wilson",studentId:"200455546", company:"Software Incorporated", rating:3, period:"Feb–Mar 2026", updatedAt:"Mar 10, 2026", performance:"Good understanding of database concepts.",recommendation:"Suitable for continuation." },
-];
-
-const EvaluationsPage = ({ onNavigate, showToast }) => {
+const EvaluationsPage = ({ onNavigate, showToast, evaluations }) => {
   const [selected, setSelected] = useState(null);
   const ratingLabels = { 1:"Poor", 2:"Below Avg", 3:"Average", 4:"Good", 5:"Excellent" };
   const ratingColors = { 1:"#d32f2f", 2:"#f97316", 3:"#f9a825", 4:"#388e3c", 5:"#15653a" };
@@ -594,9 +613,9 @@ const EvaluationsPage = ({ onNavigate, showToast }) => {
       <p style={{ fontSize:14, color:"#6b7280", marginBottom:24 }}>Reports submitted by workplace supervisors about your students</p>
       <div style={{ height:1, background:"#e5e7eb", marginBottom:24 }} />
 
-      {DEMO_EVALUATIONS.length === 0
+      {evaluations.length === 0
         ? <div className="empty"><Ic icon={Star} size={28} color="#9ca3af" /><p style={{ marginTop:12, fontWeight:700, color:"#374151" }}>No evaluations yet</p></div>
-        : DEMO_EVALUATIONS.map((ev, i) => (
+        : evaluations.map((ev, i) => (
           <div key={ev.id} className="card fade-up" style={{ marginBottom:12, animationDelay:`${i*.05}s` }}>
             <div className="card-body">
               <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:12, flexWrap:"wrap" }}>
@@ -675,12 +694,84 @@ const EvaluationsPage = ({ onNavigate, showToast }) => {
    ROOT
 ════════════════════════════════════════════════════════════════ */
 export default function AcademicSupervisorDashboard() {
-  const { user, logout } = useAuth();
+  const { user, logout, authFetch } = useAuth();
   const navigate = useNavigate();
   const [page, setPage]   = useState("home");
   const [gToast, showToast] = useToast();
+  const [rawStudents, setRawStudents] = useState([]);
+  const [rawReports, setRawReports] = useState([]);
+  const [rawEvaluations, setRawEvaluations] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadData = useCallback(async () => {
+    try {
+      const [st, rep, ev] = await Promise.all([
+        authFetch("/academic-supervisor/students"),
+        authFetch("/academic-supervisor/reports"),
+        authFetch("/academic-supervisor/evaluations"),
+      ]);
+      setRawStudents(st.students || []);
+      setRawReports(rep.reports || []);
+      setRawEvaluations(ev.evaluations || []);
+    } catch (e) {
+      showToast(e.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [authFetch, showToast]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const studentUserId = (s) => s.user?._id || s.user;
+
+  const students = rawStudents.map((s) => {
+    const uid = studentUserId(s);
+    const rs = rawReports.filter(
+      (r) => String(r.student?._id || r.student) === String(uid)
+    );
+    return {
+      id: uid,
+      name: s.user?.name || "—",
+      studentId: s.studentId || "—",
+      dept: s.department || "—",
+      level: s.level || "—",
+      company: s.companyName || "Not set",
+      location: s.companyLocation || "—",
+      started: !!s.internshipStarted,
+      reports: rs.length,
+      pending: rs.filter((r) => r.status === "pending").length,
+      evaluationRating: null,
+    };
+  });
+
+  const reports = rawReports.map((r) => ({
+    id: r._id,
+    studentId: String(r.student?._id || r.student),
+    studentName: r.student?.name || "—",
+    type: r.reportType,
+    content: r.content,
+    date: new Date(r.createdAt).toLocaleDateString(),
+    status: r.status,
+    feedback: r.feedback || "",
+  }));
+
+  const evaluations = rawEvaluations.map((ev) => ({
+    id: ev._id,
+    studentName: ev.student?.name || "—",
+    studentId: "—",
+    company: "—",
+    rating: ev.rating,
+    period: ev.period || "—",
+    updatedAt: new Date(ev.updatedAt).toLocaleDateString(),
+    performance: ev.performance || "—",
+    recommendation: ev.recommendation || "—",
+  }));
 
   const handleLogout = () => { logout?.(); navigate("/login"); };
+  const openStudentReports = (studentUserId) => {
+    if (!studentUserId) return;
+    navigate(`/view-reports?studentId=${encodeURIComponent(studentUserId)}`);
+  };
   const displayName  = user?.name || "Supervisor";
   const initials     = displayName.split(" ").map(w => w[0]).slice(0,2).join("").toUpperCase();
 
@@ -713,10 +804,10 @@ export default function AcademicSupervisorDashboard() {
         </nav>
 
         <div className="page-wrap">
-          {page === "home"        && <HomePage      user={user} onNavigate={setPage} showToast={showToast} />}
-          {page === "students"    && <StudentsPage  onNavigate={setPage} showToast={showToast} />}
-          {page === "reports"     && <ReportsPage   onNavigate={setPage} showToast={showToast} />}
-          {page === "evaluations" && <EvaluationsPage onNavigate={setPage} showToast={showToast} />}
+          {page === "home"        && <HomePage user={user} onNavigate={setPage} showToast={showToast} students={students} reports={reports} loading={loading} />}
+          {page === "students"    && <StudentsPage onNavigate={setPage} showToast={showToast} students={students} onOpenStudentReports={openStudentReports} />}
+          {page === "reports"     && <ReportsPage onNavigate={setPage} showToast={showToast} reports={reports} onRefreshReports={loadData} />}
+          {page === "evaluations" && <EvaluationsPage onNavigate={setPage} showToast={showToast} evaluations={evaluations} />}
         </div>
       </div>
     </>

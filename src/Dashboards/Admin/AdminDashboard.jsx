@@ -34,7 +34,7 @@ const AdminDashboard = () => {
       }
     }
     fetchStats()
-  }, [])
+  }, [authFetch])
 
   const handleLogout = () => {
     logout()

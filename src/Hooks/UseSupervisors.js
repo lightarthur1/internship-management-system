@@ -30,9 +30,10 @@ export default function useSupervisors() {
         studentCount: 0, // computed below
       }));
 
-      // Normalise students
+      // Normalise students (id = profile _id for UI key; userId = User._id for admin API)
       const normStudents = stuData.students.map((s) => ({
         id:           s._id,
+        userId:       s.user?._id || s.user,
         name:         s.user?.name      || "—",
         studentId:    s.studentId       || "—",
         department:   s.department      || "—",
@@ -46,9 +47,8 @@ export default function useSupervisors() {
       // Compute student count per supervisor
       const withCount = normSups.map((sup) => ({
         ...sup,
-        studentCount: normStudents.filter(
-          (st) => st.supervisorId === sup.id
-        ).length,
+        studentCount: normStudents.filter((st) => st.supervisorId === sup.id)
+          .length,
       }));
 
       setSupervisors(withCount);
@@ -58,27 +58,27 @@ export default function useSupervisors() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [authFetch]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
   // ── Assign supervisor to student ──────────────────────────────────────────
-  const assignSupervisor = async (studentUserId, supervisorId) => {
+  const assignSupervisor = async (studentUserId, supervisorUserId) => {
     try {
       await authFetch("/admin/assign-supervisor", {
         method: "PUT",
-        body: JSON.stringify({ studentUserId, supervisorId }),
+        body: JSON.stringify({ studentUserId, supervisorUserId }),
       });
 
-      const supervisor = supervisors.find((s) => s.id === supervisorId);
+      const supervisor = supervisors.find((s) => s.id === supervisorUserId);
 
       // Update students list locally
       setStudents((prev) =>
         prev.map((s) =>
-          s.id === studentUserId
+          s.userId === studentUserId
             ? {
                 ...s,
-                supervisorId,
+                supervisorId: supervisorUserId,
                 supervisor: supervisor
                   ? { id: supervisor.id, name: supervisor.name }
                   : null,
@@ -90,11 +90,10 @@ export default function useSupervisors() {
       // Update supervisor student counts
       setSupervisors((prev) =>
         prev.map((sup) => {
-          const count = students.filter(
-            (st) =>
-              st.id === studentUserId
-                ? sup.id === supervisorId
-                : st.supervisorId === sup.id
+          const count = students.filter((st) =>
+            st.userId === studentUserId
+              ? sup.id === supervisorUserId
+              : st.supervisorId === sup.id
           ).length;
           return { ...sup, studentCount: count };
         })

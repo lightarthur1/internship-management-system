@@ -36,7 +36,7 @@ export default function useLetters() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [authFetch]);
 
   useEffect(() => { fetchLetters(); }, [fetchLetters]);
 

@@ -53,7 +53,7 @@ const updateProfile = async (req, res, next) => {
     const profile = await StudentProfile.findOneAndUpdate(
       { user: req.user.id },
       updateData,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     )
       .populate('user', 'name email')
       .populate('academicSupervisor', 'name email')

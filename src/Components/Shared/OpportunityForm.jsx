@@ -1,12 +1,15 @@
 import React from "react";
 import "./OpportunityForm.css";
+import { isOpportunityLogoImage } from "../../utils/opportunityLogo";
 
 const OpportunityForm = ({ form, onChange }) => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => onChange({ ...form, logo: ev.target.result });
+    /* Persist as companyEmoji — backend + UseOpportunities only store that field (not `logo`). */
+    reader.onload = (ev) =>
+      onChange({ ...form, companyEmoji: ev.target.result });
     reader.readAsDataURL(file);
   };
 
@@ -34,9 +37,9 @@ const OpportunityForm = ({ form, onChange }) => {
               className="form-upload-input"
               onChange={handleImageUpload}
             />
-            {form.logo ? (
+            {isOpportunityLogoImage(form.companyEmoji) ? (
               <div className="upload-preview">
-                <img src={form.logo} alt="Company logo" className="upload-preview-img" />
+                <img src={form.companyEmoji} alt="Company logo" className="upload-preview-img" />
                 <div className="upload-preview-overlay">Change</div>
               </div>
             ) : (

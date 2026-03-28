@@ -33,7 +33,7 @@ const upsertEvaluation = async (req, res, next) => {
     const evaluation = await SupervisorEvaluation.findOneAndUpdate(
       { workplaceSupervisor: req.user.id, student: studentId },
       evalData,
-      { new: true, upsert: true, runValidators: true }
+      { returnDocument: 'after', upsert: true, runValidators: true }
     );
 
     res.status(200).json({ success: true, evaluation });

@@ -24,7 +24,10 @@ const createOpportunity = async (req, res, next) => {
 // @PUT /api/admin/opportunities/:id
 const updateOpportunity = async (req, res, next) => {
   try {
-    const opportunity = await Opportunity.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const opportunity = await Opportunity.findByIdAndUpdate(req.params.id, req.body, {
+      returnDocument: 'after',
+      runValidators: true,
+    });
     if (!opportunity) return res.status(404).json({ success: false, message: 'Opportunity not found.' });
     res.status(200).json({ success: true, opportunity });
   } catch (err) { next(err); }
@@ -33,7 +36,9 @@ const updateOpportunity = async (req, res, next) => {
 // @DELETE /api/admin/opportunities/:id
 const deleteOpportunity = async (req, res, next) => {
   try {
-    const opportunity = await Opportunity.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
+    const opportunity = await Opportunity.findByIdAndUpdate(req.params.id, { isActive: false }, {
+      returnDocument: 'after',
+    });
     if (!opportunity) return res.status(404).json({ success: false, message: 'Opportunity not found.' });
     res.status(200).json({ success: true, message: 'Opportunity deactivated.' });
   } catch (err) { next(err); }
@@ -53,7 +58,7 @@ const assignSupervisor = async (req, res, next) => {
     const profile = await StudentProfile.findOneAndUpdate(
       { user: studentUserId },
       { academicSupervisor: supervisorUserId },
-      { new: true }
+      { returnDocument: 'after' }
     ).populate('user', 'name email').populate('academicSupervisor', 'name email');
 
     if (!profile) return res.status(404).json({ success: false, message: 'Student profile not found.' });

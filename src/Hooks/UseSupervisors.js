@@ -1,103 +1,118 @@
-import { useState } from "react";
-
-const INITIAL_SUPERVISORS = [
-  {
-    id: 1,
-    name: "Dr. Sarah Williams",
-    department: "Computer Science",
-    email: "sarah.w@university.edu",
-  },
-  {
-    id: 2,
-    name: "Prof. James Brown",
-    department: "Business Administration",
-    email: "james.b@university.edu",
-  },
-  {
-    id: 3,
-    name: "Dr. Emily Davis",
-    department: "Engineering",
-    email: "emily.d@university.edu",
-  },
-  {
-    id: 4,
-    name: "Dr. Michael Chen",
-    department: "Computer Science",
-    email: "michael.c@university.edu",
-  },
-];
-
-const INITIAL_STUDENTS = [
-  {
-    id: 1,
-    name: "John Doe",
-    studentId: "2024001",
-    department: "Computer Science",
-    company: "Tech Solutions Ltd",
-    supervisorId: 1, // pre-assigned
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    studentId: "2024002",
-    department: "Business Administration",
-    company: "Finance Group Inc",
-    supervisorId: null,
-  },
-  {
-    id: 3,
-    name: "Michael Johnson",
-    studentId: "2024003",
-    department: "Engineering",
-    company: "Engineering Dynamics",
-    supervisorId: null,
-  },
-  {
-    id: 4,
-    name: "Emily Brown",
-    studentId: "2024004",
-    department: "Computer Science",
-    company: "Digital Marketing Pro",
-    supervisorId: 4, // pre-assigned
-  },
-];
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "../Context/AuthContext";
 
 export default function useSupervisors() {
-  const [supervisors] = useState(INITIAL_SUPERVISORS);
-  const [students, setStudents] = useState(INITIAL_STUDENTS);
-  const [toast, setToast] = useState(null);
+  const { authFetch } = useAuth();
+  const [supervisors, setSupervisors] = useState([]);
+  const [students, setStudents]       = useState([]);
+  const [toast, setToast]             = useState(null);
+  const [loading, setLoading]         = useState(true);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  const assignSupervisor = (studentId, supervisorId) => {
-    const supervisor = supervisors.find((s) => s.id === supervisorId);
-    setStudents((prev) =>
-      prev.map((s) =>
-        s.id === studentId ? { ...s, supervisorId } : s
-      )
-    );
-    showToast(`Supervisor assigned: ${supervisor.name}`);
+  // ── Fetch supervisors and students in parallel ────────────────────────────
+  const fetchData = useCallback(async () => {
+    try {
+      const [supData, stuData] = await Promise.all([
+        authFetch("/admin/supervisors?role=academic-supervisor"),
+        authFetch("/admin/students"),
+      ]);
+
+      // Normalise supervisors
+      const normSups = supData.supervisors.map((s) => ({
+        id:           s._id,
+        name:         s.name,
+        email:        s.email,
+        department:   s.department || "—",
+        studentCount: 0, // computed below
+      }));
+
+      // Normalise students
+      const normStudents = stuData.students.map((s) => ({
+        id:           s._id,
+        name:         s.user?.name      || "—",
+        studentId:    s.studentId       || "—",
+        department:   s.department      || "—",
+        company:      s.companyName     || "Not set",
+        supervisorId: s.academicSupervisor?._id || null,
+        supervisor:   s.academicSupervisor
+          ? { id: s.academicSupervisor._id, name: s.academicSupervisor.name }
+          : null,
+      }));
+
+      // Compute student count per supervisor
+      const withCount = normSups.map((sup) => ({
+        ...sup,
+        studentCount: normStudents.filter(
+          (st) => st.supervisorId === sup.id
+        ).length,
+      }));
+
+      setSupervisors(withCount);
+      setStudents(normStudents);
+    } catch (err) {
+      showToast("Failed to load data: " + err.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  // ── Assign supervisor to student ──────────────────────────────────────────
+  const assignSupervisor = async (studentUserId, supervisorId) => {
+    try {
+      await authFetch("/admin/assign-supervisor", {
+        method: "PUT",
+        body: JSON.stringify({ studentUserId, supervisorId }),
+      });
+
+      const supervisor = supervisors.find((s) => s.id === supervisorId);
+
+      // Update students list locally
+      setStudents((prev) =>
+        prev.map((s) =>
+          s.id === studentUserId
+            ? {
+                ...s,
+                supervisorId,
+                supervisor: supervisor
+                  ? { id: supervisor.id, name: supervisor.name }
+                  : null,
+              }
+            : s
+        )
+      );
+
+      // Update supervisor student counts
+      setSupervisors((prev) =>
+        prev.map((sup) => {
+          const count = students.filter(
+            (st) =>
+              st.id === studentUserId
+                ? sup.id === supervisorId
+                : st.supervisorId === sup.id
+          ).length;
+          return { ...sup, studentCount: count };
+        })
+      );
+
+      showToast(
+        `Supervisor ${supervisor?.name || ""} assigned successfully!`
+      );
+    } catch (err) {
+      showToast("Failed to assign: " + err.message, "error");
+    }
   };
 
-  // Compute student count per supervisor dynamically
-  const supervisorsWithCount = supervisors.map((sup) => ({
-    ...sup,
-    studentCount: students.filter((s) => s.supervisorId === sup.id).length,
-  }));
-
-  // Enrich students with their supervisor object
-  const enrichedStudents = students.map((student) => ({
-    ...student,
-    supervisor: supervisors.find((s) => s.id === student.supervisorId) || null,
-  }));
-
   return {
-    supervisors: supervisorsWithCount,
-    students: enrichedStudents,
+    supervisors,
+    students,
     toast,
+    loading,
     assignSupervisor,
   };
 }

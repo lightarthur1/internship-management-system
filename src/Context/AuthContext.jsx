@@ -1,54 +1,86 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext();
 
-export const useAuth = () => useContext(AuthContext);
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+  const [user,    setUser]    = useState(null);
+  const [token,   setToken]   = useState(() => localStorage.getItem("ims_token") || null);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const savedUser = localStorage.getItem('ims_user');
-        if (savedUser) {
-            setUser(JSON.parse(savedUser));
-        }
-        setLoading(false);
-    }, []);
+  // ── On mount: restore session from localStorage ──
+  useEffect(() => {
+    const savedUser = localStorage.getItem("ims_user");
+    if (savedUser && token) {
+      setUser(JSON.parse(savedUser));
+    }
+    setLoading(false);
+  }, []);
 
-    const login = (email, password) => {
-        // Simple mock logic: email determines role for testing
-        let role = 'student';
-        if (email.includes('admin')) role = 'admin';
-        else if (email.includes('academic-supervisor')) role = 'academic-supervisor';
-        else if (email.includes('workplace-supervisor')) role = 'workplace-supervisor';
+  // ── Signup ────────────────────────────────────────────────────────────────
+  const signup = async ({ name, email, password, role }) => {
+    const res = await fetch(`${API}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password, role }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
 
-        const mockUser = {
-            id: Math.random().toString(36).substr(2, 9),
-            email,
-            role,
-            name: email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1)
-        };
-        setUser(mockUser);
-        localStorage.setItem('ims_user', JSON.stringify(mockUser));
-        return mockUser;
-    };
+    setToken(data.token);
+    setUser(data.user);
+    localStorage.setItem("ims_token",  data.token);
+    localStorage.setItem("ims_user",   JSON.stringify(data.user));
+    return data.user;
+  };
 
-    const signup = (userData) => {
-        // Mock signup logic
-        setUser(userData);
-        localStorage.setItem('ims_user', JSON.stringify(userData));
-        return userData;
-    };
+  // ── Login ─────────────────────────────────────────────────────────────────
+  // Works for ALL roles including admin secret login — the backend handles the check
+  const login = async (email, password) => {
+    const res = await fetch(`${API}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
 
-    const logout = () => {
-        setUser(null);
-        localStorage.removeItem('ims_user');
-    };
+    setToken(data.token);
+    setUser(data.user);
+    localStorage.setItem("ims_token",  data.token);
+    localStorage.setItem("ims_user",   JSON.stringify(data.user));
+    return data.user;
+  };
 
-    return (
-        <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
-            {!loading && children}
-        </AuthContext.Provider>
-    );
+  // ── Logout ────────────────────────────────────────────────────────────────
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem("ims_token");
+    localStorage.removeItem("ims_user");
+  };
+
+  // ── Authenticated fetch helper (use this for all API calls in dashboards) ──
+  const authFetch = async (endpoint, options = {}) => {
+    const res = await fetch(`${API}${endpoint}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        ...(options.headers || {}),
+      },
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    return data;
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, token, loading, signup, login, logout, authFetch }}>
+      {!loading && children}
+    </AuthContext.Provider>
+  );
 };
+
+export const useAuth = () => useContext(AuthContext);

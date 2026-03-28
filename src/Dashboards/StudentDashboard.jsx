@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 import {
@@ -6,8 +6,10 @@ import {
   ChevronRight, ArrowLeft, Search, MapPin, Calendar, Upload,
   Eye, Plus, X, Check, AlertCircle, User, Edit3,
   TrendingUp, Award, Star, BookOpen, Zap,
-  Building2, GraduationCap, Hash, Phone, ChevronDown
+  Building2, GraduationCap, Hash, Phone, ChevronDown, Mail
 } from "lucide-react";
+import generateInternshipLetter from "../utils/generateInternshipLetter";
+import knustLogo from "../assets/knust-logo.png";
 
 /* ════════════════════════════════════════════════════════════════════
    CSS
@@ -385,62 +387,153 @@ const INIT_REPORTS = [
 /* ════════════════════════════════════════════════════════════════════
    PROFILE SETUP WIZARD
 ════════════════════════════════════════════════════════════════════ */
-const ProfileWizard = ({ user, onComplete }) => {
-  const [step, setStep] = useState(1);
+export const ProfileWizard = ({ user, onComplete }) => {
+  const { authFetch } = useAuth();
+  const [step, setStep]         = useState(1);
+  const [supervisors, setSups]  = useState([]);
   const TOTAL = 3;
-  const [f, setF] = useState({ studentId:"", dept:"", level:"", phone:"", state:"", supervisor:"" });
+
+  const [f, setF] = useState({
+    studentId: "", dept: "", level: "",
+    phone: "", location: "",
+    academicSupervisorId: "",          // stores _id of chosen supervisor
+    academicSupervisorName: "",        // display name for review step
+  });
   const up = (k, v) => setF(p => ({ ...p, [k]: v }));
+
+  // Fetch supervisors list when component mounts
+  useEffect(() => {
+    authFetch("/student/academic-supervisors")
+      .then(data => setSups(data.supervisors || []))
+      .catch(() => {}); // fallback: empty list — admin will assign
+  }, []);
 
   const canNext = () => {
     if (step === 1) return f.studentId.trim() && f.dept && f.level;
-    if (step === 2) return f.phone.trim() && f.state.trim();
+    if (step === 2) return f.phone.trim() && f.location.trim();
     return true;
   };
 
-  const next = () => step < TOTAL ? setStep(s => s + 1) : onComplete(f);
+  const next = () => {
+    if (step < TOTAL) { setStep(s => s + 1); return; }
+    // On final step submit, build payload for PUT /api/student/profile
+    onComplete({
+      studentId:           f.studentId,
+      department:          f.dept,
+      level:               f.level,
+      phone:               f.phone,
+      location:            f.location,
+      academicSupervisorId: f.academicSupervisorId || undefined,
+    });
+  };
 
   const rows = [
-    ["Full Name",  user?.name  || "—"],
-    ["Email",      user?.email || "—"],
-    ["Student ID", f.studentId],
-    ["Department", f.dept],
-    ["Level",      f.level],
-    ["Phone",      f.phone],
-    ["State",      f.state],
-    ...(f.supervisor ? [["Supervisor", f.supervisor]] : []),
+    ["Full Name",   user?.name   || "—"],
+    ["Email",       user?.email  || "—"],
+    ["Student ID",  f.studentId],
+    ["Department",  f.dept],
+    ["Level",       f.level],
+    ["Phone",       f.phone],
+    ["City/Region", f.location],
+    ...(f.academicSupervisorName ? [["Supervisor", f.academicSupervisorName]] : [["Supervisor","Will be assigned by admin"]]),
   ];
 
   return (
     <div className="wizard-overlay">
       <div className="wizard-box">
+        {/* Progress bar */}
         <div className="wiz-bar">
           {Array.from({ length: TOTAL }).map((_, i) => (
             <div key={i} className={`wiz-seg${i < step ? " on" : ""}`} />
           ))}
         </div>
 
+        {/* ── Step 1: Academic Details ── */}
         {step === 1 && (
           <div className="fade-up">
             <p style={{ fontSize:11, fontWeight:700, color:"#15653a", textTransform:"uppercase", letterSpacing:".08em", marginBottom:6 }}>Step 1 of 3</p>
             <h2 style={{ fontSize:22, fontWeight:800, color:"#111827", marginBottom:6 }}>Academic Details</h2>
             <p style={{ fontSize:14, color:"#6b7280", marginBottom:24 }}>Hi <strong style={{ color:"#15653a" }}>{user?.name || "there"}</strong>! Let's complete your student profile.</p>
-            <div className="fg"><label className="fl">Student ID *</label><input className="fi" placeholder="e.g. 21674652" value={f.studentId} onChange={e => up("studentId", e.target.value)} /></div>
-            <div className="fg"><label className="fl">Department *</label><div className="sw"><select className="fs" value={f.dept} onChange={e => up("dept", e.target.value)}><option value="">Select department…</option>{DEPTS.map(d => <option key={d} value={d}>{d}</option>)}</select><Ic icon={ChevronDown} size={15} color="#9ca3af" /></div></div>
-            <div className="fg"><label className="fl">Level *</label><div className="sw"><select className="fs" value={f.level} onChange={e => up("level", e.target.value)}><option value="">Select level…</option>{LEVELS.map(l => <option key={l} value={l}>{l}</option>)}</select><Ic icon={ChevronDown} size={15} color="#9ca3af" /></div></div>
+
+            <div className="fg">
+              <label className="fl">Student ID *</label>
+              <input className="fi" placeholder="e.g. 21674652" value={f.studentId} onChange={e => up("studentId", e.target.value)} />
+            </div>
+            <div className="fg">
+              <label className="fl">Department *</label>
+              <div className="sw">
+                <select className="fs" value={f.dept} onChange={e => up("dept", e.target.value)}>
+                  <option value="">Select department…</option>
+                  {DEPTS.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+                <Ic icon={ChevronDown} size={15} color="#9ca3af" />
+              </div>
+            </div>
+            <div className="fg">
+              <label className="fl">Level *</label>
+              <div className="sw">
+                <select className="fs" value={f.level} onChange={e => up("level", e.target.value)}>
+                  <option value="">Select level…</option>
+                  {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
+                </select>
+                <Ic icon={ChevronDown} size={15} color="#9ca3af" />
+              </div>
+            </div>
           </div>
         )}
 
+        {/* ── Step 2: Contact + Supervisor ── */}
         {step === 2 && (
           <div className="fade-up">
             <p style={{ fontSize:11, fontWeight:700, color:"#15653a", textTransform:"uppercase", letterSpacing:".08em", marginBottom:6 }}>Step 2 of 3</p>
             <h2 style={{ fontSize:22, fontWeight:800, color:"#111827", marginBottom:6 }}>Contact Details</h2>
-            <p style={{ fontSize:14, color:"#6b7280", marginBottom:24 }}>How can your supervisors reach you?</p>
-            <div className="fg"><label className="fl">Phone Number *</label><input className="fi" placeholder="e.g. 0201 234 5678" value={f.phone} onChange={e => up("phone", e.target.value)} /></div>
-            <div className="fg"><label className="fl">State of Origin *</label><input className="fi" placeholder="e.g. Kumasi" value={f.state} onChange={e => up("state", e.target.value)} /></div>
-            <div className="fg"><label className="fl">Academic Supervisor (optional)</label><input className="fi" placeholder="e.g. Dr. Linda Amoako Banning" value={f.supervisor} onChange={e => up("supervisor", e.target.value)} /></div>
+            <p style={{ fontSize:14, color:"#6b7280", marginBottom:24 }}>Your contact info and supervisor preference.</p>
+
+            <div className="fg">
+              <label className="fl">Phone Number *</label>
+              <input className="fi" placeholder="e.g. 0201 234 5678" value={f.phone} onChange={e => up("phone", e.target.value)} />
+            </div>
+
+            {/* Renamed from "State of Origin" to "City / Region" — more internationally appropriate */}
+            <div className="fg">
+              <label className="fl">City / Region *</label>
+              <input className="fi" placeholder="e.g. Kumasi, Ashanti" value={f.location} onChange={e => up("location", e.target.value)} />
+            </div>
+
+            {/* Supervisor dropdown — populated from API */}
+            <div className="fg">
+              <label className="fl">Academic Supervisor (optional)</label>
+              {supervisors.length > 0 ? (
+                <div className="sw">
+                  <select
+                    className="fs"
+                    value={f.academicSupervisorId}
+                    onChange={e => {
+                      const chosen = supervisors.find(s => s._id === e.target.value);
+                      up("academicSupervisorId", e.target.value);
+                      up("academicSupervisorName", chosen ? chosen.name : "");
+                    }}
+                  >
+                    <option value="">Select your supervisor…</option>
+                    {supervisors.map(s => (
+                      <option key={s._id} value={s._id}>{s.name} — {s.email}</option>
+                    ))}
+                  </select>
+                  <Ic icon={ChevronDown} size={15} color="#9ca3af" />
+                </div>
+              ) : (
+                <div style={{ padding:"11px 14px", border:"1px solid #e5e7eb", borderRadius:9, background:"#f9fafb", fontSize:13, color:"#9ca3af", fontStyle:"italic" }}>
+                  No supervisors registered yet — admin will assign one to you.
+                </div>
+              )}
+              <p style={{ fontSize:11, color:"#9ca3af", marginTop:5 }}>
+                You can skip this — your admin can also assign a supervisor to you later.
+              </p>
+            </div>
           </div>
         )}
 
+        {/* ── Step 3: Review ── */}
         {step === 3 && (
           <div className="fade-up">
             <p style={{ fontSize:11, fontWeight:700, color:"#15653a", textTransform:"uppercase", letterSpacing:".08em", marginBottom:6 }}>Step 3 of 3</p>
@@ -457,6 +550,7 @@ const ProfileWizard = ({ user, onComplete }) => {
           </div>
         )}
 
+        {/* Navigation buttons */}
         <div className="mbr" style={{ display:"flex", gap:10, marginTop:8 }}>
           {step > 1 && <button className="btn-g" style={{ flex:1 }} onClick={() => setStep(s => s - 1)}>Back</button>}
           <button className="btn-p" style={{ flex:2 }} disabled={!canNext()} onClick={canNext() ? next : undefined}>
@@ -468,6 +562,118 @@ const ProfileWizard = ({ user, onComplete }) => {
   );
 };
 
+
+
+// ─────────────────────────────────────────────────────────────────
+//  NEW: InternshipStartModal
+//  Use this instead of the bare toggle in HomePage.
+//  Props:
+//    open         — boolean
+//    onClose      — () => void
+//    onConfirm    — (formData) => void   (calls the API)
+//    showToast    — (msg, type) => void
+
+
+export const InternshipStartModal = ({ open, onClose, onConfirm, showToast }) => {
+  const [form, setForm]   = useState({ wsEmail: "", startDate: "", endDate: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const up = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+  if (!open) return null;
+
+  const handleSubmit = async () => {
+    if (!form.wsEmail.trim() || !form.wsEmail.includes("@")) {
+      setError("Please enter a valid workplace supervisor email."); return;
+    }
+    if (!form.startDate) {
+      setError("Please enter your internship start date."); return;
+    }
+    setError("");
+    setLoading(true);
+    try {
+      await onConfirm({
+        workplaceSupervisorEmail: form.wsEmail,
+        internshipStartDate:      form.startDate,
+        internshipEndDate:        form.endDate || undefined,
+      });
+      showToast("Internship marked as started! Invite sent to your supervisor. 🎉");
+      onClose();
+    } catch (err) {
+      setError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mo" onClick={onClose}>
+      <div className="mb" style={{ maxWidth:460 }} onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+          <div style={{ display:"flex", gap:12, alignItems:"center" }}>
+            <div style={{ width:44, height:44, borderRadius:12, background:"#dcfce7", display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <Ic icon={Building2} size={22} color="#15653a" />
+            </div>
+            <div>
+              <p style={{ fontSize:16, fontWeight:800, color:"#111827" }}>Starting Your Internship</p>
+              <p style={{ fontSize:12, color:"#6b7280" }}>Tell us about your workplace</p>
+            </div>
+          </div>
+          <button style={{ background:"none", border:"none", cursor:"pointer", color:"#6b7280" }} onClick={onClose}><Ic icon={X} size={18} /></button>
+        </div>
+
+        <div style={{ background:"#f0fdf4", border:"1px solid #bbf7d0", borderRadius:10, padding:"10px 14px", marginBottom:20, fontSize:13, color:"#15653a", display:"flex", gap:8, alignItems:"flex-start" }}>
+          <Ic icon={AlertCircle} size={14} color="#15653a" />
+          <span>We'll send an invite email to your workplace supervisor so they can register and submit reports about your internship.</span>
+        </div>
+
+        {error && (
+          <div style={{ background:"#fef2f2", border:"1px solid #fecaca", borderRadius:8, padding:"10px 14px", marginBottom:16, fontSize:13, color:"#b91c1c", display:"flex", gap:8, alignItems:"center" }}>
+            <Ic icon={AlertCircle} size={14} color="#b91c1c" />{error}
+          </div>
+        )}
+
+        {/* Form */}
+        <div className="fg">
+          <label className="fl">Workplace Supervisor Email *</label>
+          <div style={{ position:"relative" }}>
+            <Ic icon={Mail} size={15} color="#9ca3af" style={{ position:"absolute", left:13, top:"50%", transform:"translateY(-50%)" }} />
+            <input
+              className="fi"
+              style={{ paddingLeft:38 }}
+              type="email"
+              placeholder="supervisor@company.com"
+              value={form.wsEmail}
+              onChange={e => up("wsEmail", e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="fg">
+          <label className="fl">Internship Start Date *</label>
+          <input className="fi" type="date" value={form.startDate} onChange={e => up("startDate", e.target.value)} />
+        </div>
+
+        <div className="fg">
+          <label className="fl">Expected End Date (optional)</label>
+          <input className="fi" type="date" value={form.endDate} onChange={e => up("endDate", e.target.value)} min={form.startDate} />
+        </div>
+
+        {/* Buttons */}
+        <div style={{ display:"flex", gap:10, marginTop:4 }}>
+          <button className="btn-g" style={{ flex:1 }} onClick={onClose}>Cancel</button>
+          <button className="btn-p" style={{ flex:2 }} disabled={loading} onClick={handleSubmit}>
+            {loading ? "Sending invite…" : <><Ic icon={Check} size={14} />Confirm & Start</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 /* ════════════════════════════════════════════════════════════════════
    HOME PAGE
 ════════════════════════════════════════════════════════════════════ */
@@ -476,6 +682,9 @@ const HomePage = ({ user, profile, onNavigate, internshipStarted, setInternshipS
   const approved   = reports.filter(r => r.status === "approved").length;
   const pending    = reports.filter(r => r.status === "pending").length;
   const initials   = (user?.name || "ST").split(" ").map(w => w[0]).slice(0,2).join("").toUpperCase();
+
+  const [showStartModal, setShowStartModal] = useState(false);
+  const { authFetch } = useAuth();
 
   return (
     <div className="fade-in">
@@ -508,12 +717,12 @@ const HomePage = ({ user, profile, onNavigate, internshipStarted, setInternshipS
           </div>
           <div className="info-grid">
             {[
-              ["Student ID",  profile.studentId ],
-              ["Department",  profile.dept      ],
-              ["Level",       profile.level     ],
-              ["Phone",       profile.phone     ],
-              ["Email",       user?.email       ],
-              ["Supervisor",  profile.supervisor],
+              ["Student ID",  profile.studentId],
+              ["Department",  profile.department],
+              ["Level",       profile.level],
+              ["Phone",       profile.phone],
+              ["Email",       user?.email],
+              ["Supervisor",  profile.academicSupervisor?.name || "Not assigned"],
             ].map(([l, v]) => (
               <div key={l}>
                 <p className="info-label">{l}</p>
@@ -577,34 +786,61 @@ const HomePage = ({ user, profile, onNavigate, internshipStarted, setInternshipS
             <p style={{ fontSize:11, color:"#9ca3af", marginTop:5 }}>{submitted} of 12 weeks reported</p>
           </div>
           <div className="divider" />
-          <button className="btn-p" style={{ width:"100%", padding:"11px" }} onClick={() => showToast("Internship letter downloaded!")}>
-            <Ic icon={Download} size={15} />Download Internship Letter
-          </button>
+
+          <button
+            className="btn-p"
+            style={{ width:"100%", padding:"11px" }}
+            onClick={async () => {
+              try {
+                    const data = await authFetch(`/letters/${letterId}/download`);
+                    generateInternshipLetter(data.letter, knustLogo);
+                    showToast("Letter opened — press Ctrl+P to save as PDF");
+                  } catch (err) {
+                      showToast(err.message, "error");
+                  }
+  }}
+>
+  <Ic icon={Download} size={15} />Download Internship Letter
+</button>
         </div>
       </div>
 
       {/* Toggle */}
       <div className="card">
-        <div className="card-body">
-          <p className="card-title">Internship Status</p>
-          <p style={{ fontSize:14, color:"#6b7280", marginBottom:16 }}>Have you started your internship or been called to start?</p>
-          <div style={{ display:"flex", alignItems:"center", gap:14 }}>
-            <button
-              onClick={() => { setInternshipStarted(s => !s); showToast(internshipStarted ? "Status updated." : "Internship marked as started! 🎉"); }}
-              style={{ width:46, height:26, borderRadius:99, background:internshipStarted?"#15653a":"#d1d5db", position:"relative", border:"none", cursor:"pointer", transition:"background .2s", flexShrink:0 }}>
-              <span style={{ position:"absolute", width:20, height:20, borderRadius:"50%", background:"#fff", top:3, left:internshipStarted?23:3, transition:"left .2s", boxShadow:"0 1px 3px rgba(0,0,0,.2)" }} />
-            </button>
-            <div>
-              <p style={{ fontSize:14, fontWeight:600, color:internshipStarted?"#15653a":"#374151" }}>
-                {internshipStarted ? "Internship Started ✓" : "Not Started Yet"}
-              </p>
-              <p style={{ fontSize:12, color:"#9ca3af", marginTop:2 }}>
-                {internshipStarted ? "Your internship is active and being tracked." : "Toggle when you officially begin."}
-              </p>
-            </div>
-          </div>
+  <div className="card-body">
+    <p className="card-title">Internship Status</p>
+    <p style={{ fontSize:14, color:"#6b7280", marginBottom:16 }}>
+      Have you started your internship or been called to start?
+    </p>
+
+    {internshipStarted ? (
+      <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+        <div style={{ width:46, height:26, borderRadius:99, background:"#15653a", position:"relative", flexShrink:0 }}>
+          <span style={{ position:"absolute", width:20, height:20, borderRadius:"50%", background:"#fff", top:3, left:23 }} />
         </div>
+        <p style={{ fontSize:14, fontWeight:600, color:"#15653a" }}>Internship Started ✓</p>
       </div>
+    ) : (
+      <button className="btn-p" onClick={() => setShowStartModal(true)}>
+        Mark Internship as Started
+      </button>
+    )}
+  </div>
+</div>
+
+<InternshipStartModal
+  open={showStartModal}
+  onClose={() => setShowStartModal(false)}
+  onConfirm={async (data) => {
+    await authFetch("/student/start-internship", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+    setInternshipStarted(true);
+    setShowStartModal(false);
+  }}
+  showToast={showToast}
+/>
     </div>
   );
 };
@@ -1058,7 +1294,7 @@ const StatusPage = ({ onNavigate, internshipStarted, profile, user, reports, sho
    ROOT
 ════════════════════════════════════════════════════════════════════ */
 export default function StudentDashboard() {
-  const { user, logout }         = useAuth();
+  const { user, logout, authFetch }         = useAuth();
   const navigate                 = useNavigate();
   const [page,    setPage]       = useState("home");
   const [profile, setProfile]    = useState(null);
@@ -1082,7 +1318,22 @@ export default function StudentDashboard() {
         {gToast && <ToastEl key={gToast.key} msg={gToast.msg} type={gToast.type} />}
 
         {/* Profile wizard */}
-        {!profile && <ProfileWizard user={user} onComplete={setProfile} />}
+       {!profile && (
+  <ProfileWizard
+    user={user}
+    onComplete={async (formData) => {
+      try {
+        const data = await authFetch("/student/profile", {
+          method: "PUT",
+          body: JSON.stringify(formData),
+        });
+        setProfile(data.profile);
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    }}
+  />
+)}
 
         {/* Navbar */}
         <nav className="topnav">

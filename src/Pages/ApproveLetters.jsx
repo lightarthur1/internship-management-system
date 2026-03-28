@@ -11,14 +11,11 @@ const ApproveLetters = () => {
   const navigate = useNavigate();
 
   const {
-    pendingLetters,
-    processedLetters,
-    previewLetter,
-    toast,
-    handleApprove,
-    handleReject,
-    openPreview,
-    closePreview,
+    pendingLetters, processedLetters,
+    previewLetter, toast,
+    loading, processingId,
+    handleApprove, handleReject,
+    openPreview, closePreview,
   } = useLetters();
 
   return (
@@ -39,54 +36,69 @@ const ApproveLetters = () => {
       {/* Content */}
       <div className="approve-content">
 
-        {/* Pending Section */}
-        <section className="letters-section">
-          <h2 className="section-title">
-            Pending Requests ({pendingLetters.length})
-          </h2>
-          {pendingLetters.length === 0 ? (
-            <div className="empty-state">
-              <p className="empty-title">No pending requests</p>
-              <p className="empty-hint">All letters have been processed</p>
-            </div>
-          ) : (
-            <div className="letters-grid">
-              {pendingLetters.map((letter) => (
-                <LetterCard
-                  key={letter.id}
-                  letter={letter}
-                  onPreview={openPreview}
-                  onApprove={handleApprove}
-                  onReject={handleReject}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+        {loading ? (
+          <div style={{ textAlign:"center", padding:"60px 0" }}>
+            <div style={{ fontSize:36, marginBottom:12 }}>⏳</div>
+            <p style={{ fontWeight:600, color:"#6b7280", fontSize:15 }}>
+              Loading letter requests...
+            </p>
+            <p style={{ fontSize:13, color:"#9ca3af", marginTop:4 }}>
+              Connecting to database
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Pending Section */}
+            <section className="letters-section">
+              <h2 className="section-title">
+                Pending Requests ({pendingLetters.length})
+              </h2>
+              {pendingLetters.length === 0 ? (
+                <div className="empty-state">
+                  <p className="empty-title">No pending requests</p>
+                  <p className="empty-hint">All letters have been processed</p>
+                </div>
+              ) : (
+                <div className="letters-grid">
+                  {pendingLetters.map((letter) => (
+                    <LetterCard
+                      key={letter.id}
+                      letter={letter}
+                      onPreview={openPreview}
+                      onApprove={handleApprove}
+                      onReject={handleReject}
+                      processing={processingId === letter.id}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
 
-        {/* Processed Section */}
-        {processedLetters.length > 0 && (
-          <section className="letters-section">
-            <h2 className="section-title">Processed Requests</h2>
-            <div className="letters-grid">
-              {processedLetters.map((letter) => (
-                <LetterCard
-                  key={letter.id}
-                  letter={letter}
-                />
-              ))}
-            </div>
-          </section>
+            {/* Processed Section */}
+            {processedLetters.length > 0 && (
+              <section className="letters-section">
+                <h2 className="section-title">
+                  Processed Requests ({processedLetters.length})
+                </h2>
+                <div className="letters-grid">
+                  {processedLetters.map((letter) => (
+                    <LetterCard
+                      key={letter.id}
+                      letter={letter}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
         )}
 
       </div>
 
-      {/* Preview Modal */}
       {previewLetter && (
         <LetterPreviewModal letter={previewLetter} onClose={closePreview} />
       )}
 
-      {/* Toast */}
       {toast && <Toast message={toast.message} type={toast.type} />}
 
     </div>

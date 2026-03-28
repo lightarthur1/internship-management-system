@@ -890,7 +890,59 @@ function OpportunityMark({ value, size = 48, fontSize }) {
   return <div style={{ ...base, fontSize: fs, lineHeight: 1 }}>{value}</div>;
 }
 
-const OppsPage = ({ onNavigate, appliedIds, setAppliedIds, showToast, onAfterLetterRequest }) => {
+
+const CardCTA = ({ c, letter, setReqModal }) => {
+  const isRejected = letter?.status === "rejected";
+  const isPending  = letter?.status === "pending";
+  const isApproved = letter?.status === "approved";
+
+  if (isApproved) {
+    return (
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:7, padding:"11px", background:"#f0fdf4", border:"1.5px solid #bbf7d0", borderRadius:8, color:"#15653a", fontWeight:700, fontSize:14 }}>
+        ✅ Letter Approved
+      </div>
+    );
+  }
+
+  if (isPending) {
+    return (
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:7, padding:"11px", background:"#fef9c3", border:"1.5px solid #fde68a", borderRadius:8, color:"#92400e", fontWeight:700, fontSize:14 }}>
+        ⏳ Awaiting Approval
+      </div>
+    );
+  }
+
+  if (isRejected) {
+    return (
+      <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 12px", background:"#fef2f2", border:"1px solid #fecaca", borderRadius:8, color:"#b91c1c", fontSize:12, fontWeight:600 }}>
+          ❌ Rejected — {letter?.adminNote || "Request was not approved"}
+        </div>
+        <button
+          className="btn-og"
+          style={{ width:"100%", padding:"10px", fontSize:14, borderRadius:8 }}
+          onClick={e => { e.stopPropagation(); setReqModal(c); }}
+        >
+          Re-apply for this Company
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      className="btn-p"
+      style={{ width:"100%", padding:"11px", fontSize:14, borderRadius:8 }}
+      onClick={e => { e.stopPropagation(); setReqModal(c); }}
+    >
+      Request Internship Letter
+    </button>
+  );
+};
+
+
+
+const OppsPage = ({ onNavigate, appliedIds, setAppliedIds, showToast, onAfterLetterRequest, myLetters }) => {
   const { authFetch } = useAuth();
   const [search, setSearch] = useState("");
   const [modal,  setModal]  = useState(null);
@@ -928,9 +980,26 @@ const OppsPage = ({ onNavigate, appliedIds, setAppliedIds, showToast, onAfterLet
     return !q || c.name.toLowerCase().includes(q) || c.loc.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q);
   });
 
-  const isApp = (id) => appliedIds.includes(id);
+  // Returns the letter object for this opportunity (if any)
+const getLetterForOpp = (oppId) =>
+  (myLetters || []).find((l) => {
+    const lid = l.opportunity?._id || l.opportunity;
+    return lid?.toString() === oppId?.toString();
+  });
+ 
+// True only if there's a pending or approved letter — NOT rejected
+const isApp = (oppId) => {
+  const l = getLetterForOpp(oppId);
+  return l && (l.status === "pending" || l.status === "approved");
+};
 
   const handleRequest = async (c) => {
+    const existing = getLetterForOpp(c.id);
+    if (existing && (existing.status === "pending" || existing.status === "approved")) {
+      showToast("You already have an active request for this company.", "error");
+      return;
+    }
+
     try {
       await authFetch("/letters/request", {
         method: "POST",
@@ -1015,19 +1084,11 @@ const OppsPage = ({ onNavigate, appliedIds, setAppliedIds, showToast, onAfterLet
                 </div>
 
                 {/* CTA Button */}
-                {isApp(c.id) ? (
-                  <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:7, padding:"11px", background:"#f0fdf4", border:"1.5px solid #bbf7d0", borderRadius:8, color:"#15653a", fontWeight:700, fontSize:14 }}>
-                    <Ic icon={Check} size={15} color="#15803d" />Letter Requested
-                  </div>
-                ) : (
-                  <button
-                    className="btn-p"
-                    style={{ width:"100%", padding:"11px", fontSize:14, borderRadius:8 }}
-                    onClick={e => { e.stopPropagation(); setReqModal(c); }}
-                  >
-                    <Ic icon={FileText} size={15} />Request Internship Letter
-                  </button>
-                )}
+                <CardCTA 
+              c={c} 
+              letter={getLetterForOpp(c.id)} 
+              setReqModal={setReqModal} 
+            />
               </div>
             ))}
           </div>
@@ -1685,6 +1746,7 @@ export default function StudentDashboard() {
                 setAppliedIds={setAppliedOppIds}
                 showToast={showToast}
                 onAfterLetterRequest={refreshLetters}
+                myLetters={myLetters}
               />
             )}
             {page === "reports" && (

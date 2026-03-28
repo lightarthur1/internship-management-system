@@ -13,20 +13,11 @@ const ManageOpportunities = () => {
   const navigate = useNavigate();
 
   const {
-    opportunities,
-    form,
-    setForm,
-    toast,
-    showAddModal,
-    editTargetId,
-    deleteTargetId,
-    openAdd,
-    openEdit,
-    openDelete,
-    closeModals,
-    handleCreate,
-    handleUpdate,
-    handleDelete,
+    opportunities, form, setForm, toast,
+    loading, saving, deleting,
+    showAddModal, editTargetId, deleteTargetId,
+    openAdd, openEdit, openDelete, closeModals,
+    handleCreate, handleUpdate, handleDelete,
   } = useOpportunities();
 
   return (
@@ -38,13 +29,11 @@ const ManageOpportunities = () => {
             <ArrowLeft size={18} />
             Back to Dashboard
           </button>
-
-          <button className="add-btn" onClick={openAdd}>
+          <button className="add-btn" onClick={openAdd} disabled={loading}>
             <Plus size={18} />
             Add Opportunity
           </button>
         </div>
-
         <div className="page-title">
           <h1>Manage Opportunities</h1>
           <p>Add, edit, or remove internship positions</p>
@@ -52,7 +41,17 @@ const ManageOpportunities = () => {
       </div>
 
       <div className="opportunity-grid">
-        {opportunities.length === 0 ? (
+        {loading ? (
+          <div style={{ gridColumn:"1/-1", textAlign:"center", padding:"60px 0" }}>
+            <div style={{ fontSize:36, marginBottom:12 }}>⏳</div>
+            <p style={{ fontWeight:600, color:"#6b7280", fontSize:15 }}>
+              Loading opportunities...
+            </p>
+            <p style={{ fontSize:13, color:"#9ca3af", marginTop:4 }}>
+              Connecting to database
+            </p>
+          </div>
+        ) : opportunities.length === 0 ? (
           <div className="empty-state">
             <p className="empty-title">No opportunities yet</p>
             <p className="empty-hint">Click "Add Opportunity" to get started</p>
@@ -80,6 +79,7 @@ const ManageOpportunities = () => {
           onChange={setForm}
           onClose={closeModals}
           onConfirm={handleCreate}
+          saving={saving}
         />
       )}
 
@@ -89,6 +89,7 @@ const ManageOpportunities = () => {
           onChange={setForm}
           onClose={closeModals}
           onConfirm={handleUpdate}
+          saving={saving}
         />
       )}
 
@@ -96,6 +97,7 @@ const ManageOpportunities = () => {
         <ConfirmDeleteModal
           onClose={closeModals}
           onConfirm={handleDelete}
+          deleting={deleting}
         />
       )}
 

@@ -18,16 +18,22 @@ const requestLetter = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Please complete your profile first.' });
     }
 
-    // Check for existing request
-    const existing = await InternshipLetter.findOne({ student: req.user.id, opportunity: opportunityId });
+    // Check for existing PENDING or APPROVED request — block duplicate
+    // But allow re-request if previous was REJECTED
+     const existing = await InternshipLetter.findOne({
+      student: req.user.id,
+      opportunity: opportunityId,
+      status: { $in: ['pending', 'approved'] },
+    });
     if (existing) {
-      return res.status(400).json({ success: false, message: 'You already requested a letter for this opportunity.' });
+      return res.status(400).json({ success: false, message: 'You already have an active request for this opportunity.' });
     }
 
     const letter = await InternshipLetter.create({
       student: req.user.id,
       studentProfile: profile._id,
       opportunity: opportunityId,
+      status: 'pending',
     });
 
     // Update student profile with chosen company
@@ -79,17 +85,19 @@ const getAllLetters = async (req, res, next) => {
 // ── @PUT /api/letters/:id/approve (admin) ─────────────────────────────────
 const approveLetter = async (req, res, next) => {
   try {
-    const { adminNote } = req.body;
-
+    const { adminNote } = req.body || {};
+ 
     const letter = await InternshipLetter.findById(req.params.id);
-    if (!letter) return res.status(404).json({ success: false, message: 'Letter not found.' });
-
-    letter.status = 'approved';
-    letter.adminNote = adminNote || '';
+    if (!letter) {
+      return res.status(404).json({ success: false, message: 'Letter not found.' });
+    }
+ 
+    letter.status     = 'approved';
+    letter.adminNote  = adminNote || '';
     letter.reviewedBy = req.user.id;
     letter.reviewedAt = new Date();
     await letter.save();
-
+ 
     res.status(200).json({ success: true, message: 'Letter approved.', letter });
   } catch (err) {
     next(err);
@@ -99,17 +107,19 @@ const approveLetter = async (req, res, next) => {
 // ── @PUT /api/letters/:id/reject (admin) ──────────────────────────────────
 const rejectLetter = async (req, res, next) => {
   try {
-    const { adminNote } = req.body;
-
+    const { adminNote } = req.body || {};
+ 
     const letter = await InternshipLetter.findById(req.params.id);
-    if (!letter) return res.status(404).json({ success: false, message: 'Letter not found.' });
-
-    letter.status = 'rejected';
-    letter.adminNote = adminNote || 'Request rejected.';
+    if (!letter) {
+      return res.status(404).json({ success: false, message: 'Letter not found.' });
+    }
+ 
+    letter.status     = 'rejected';
+    letter.adminNote  = adminNote || 'Your letter request was not approved.';
     letter.reviewedBy = req.user.id;
     letter.reviewedAt = new Date();
     await letter.save();
-
+ 
     res.status(200).json({ success: true, message: 'Letter rejected.', letter });
   } catch (err) {
     next(err);
@@ -123,28 +133,41 @@ const downloadLetter = async (req, res, next) => {
   try {
     const letter = await InternshipLetter.findById(req.params.id)
       .populate('student', 'name email')
-      .populate({ path: 'studentProfile', populate: { path: 'academicSupervisor', select: 'name' } })
+      .populate({
+        path: 'studentProfile',
+        populate: { path: 'academicSupervisor', select: 'name email' },
+      })
       .populate('opportunity');
-
-    if (!letter) return res.status(404).json({ success: false, message: 'Letter not found.' });
-
-    // Only the owner can download their letter
-    if (letter.student._id.toString() !== req.user.id && req.user.role !== 'admin') {
+ 
+    if (!letter) {
+      return res.status(404).json({ success: false, message: 'Letter not found.' });
+    }
+ 
+    if (
+      letter.student._id.toString() !== req.user.id &&
+      req.user.role !== 'admin'
+    ) {
       return res.status(403).json({ success: false, message: 'Access denied.' });
     }
-
+ 
     if (letter.status !== 'approved') {
       return res.status(400).json({ success: false, message: 'Letter has not been approved yet.' });
     }
-
-    // Record download timestamp
+ 
     letter.downloadedAt = new Date();
     await letter.save();
-
+ 
     res.status(200).json({ success: true, letter });
   } catch (err) {
     next(err);
   }
 };
-
-module.exports = { requestLetter, getMyLetters, getAllLetters, approveLetter, rejectLetter, downloadLetter };
+ 
+module.exports = {
+  requestLetter,
+  getMyLetters,
+  getAllLetters,
+  approveLetter,
+  rejectLetter,
+  downloadLetter,
+};

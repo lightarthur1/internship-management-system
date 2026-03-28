@@ -7,13 +7,14 @@ export default function useSupervisors() {
   const [students, setStudents]       = useState([]);
   const [toast, setToast]             = useState(null);
   const [loading, setLoading]         = useState(true);
+  // tracks which student is currently being assigned
+  const [assigningId, setAssigningId] = useState(null);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  // ── Fetch supervisors and students in parallel ────────────────────────────
   const fetchData = useCallback(async () => {
     try {
       const [supData, stuData] = await Promise.all([
@@ -21,34 +22,30 @@ export default function useSupervisors() {
         authFetch("/admin/students"),
       ]);
 
-      // Normalise supervisors
       const normSups = supData.supervisors.map((s) => ({
         id:           s._id,
         name:         s.name,
         email:        s.email,
         department:   s.department || "—",
-        studentCount: 0, // computed below
+        studentCount: 0,
       }));
 
-      // Normalise students (id = profile _id for UI key; userId = User._id for admin API)
       const normStudents = stuData.students.map((s) => ({
         id:           s._id,
         userId:       s.user?._id || s.user,
-        name:         s.user?.name      || "—",
-        studentId:    s.studentId       || "—",
-        department:   s.department      || "—",
-        company:      s.companyName     || "Not set",
+        name:         s.user?.name   || "—",
+        studentId:    s.studentId    || "—",
+        department:   s.department   || "—",
+        company:      s.companyName  || "Not set",
         supervisorId: s.academicSupervisor?._id || null,
         supervisor:   s.academicSupervisor
           ? { id: s.academicSupervisor._id, name: s.academicSupervisor.name }
           : null,
       }));
 
-      // Compute student count per supervisor
       const withCount = normSups.map((sup) => ({
         ...sup,
-        studentCount: normStudents.filter((st) => st.supervisorId === sup.id)
-          .length,
+        studentCount: normStudents.filter((st) => st.supervisorId === sup.id).length,
       }));
 
       setSupervisors(withCount);
@@ -62,8 +59,9 @@ export default function useSupervisors() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // ── Assign supervisor to student ──────────────────────────────────────────
+  // ── Assign ──────────────────────────────────────────────────────────────
   const assignSupervisor = async (studentUserId, supervisorUserId) => {
+    setAssigningId(studentUserId);
     try {
       await authFetch("/admin/assign-supervisor", {
         method: "PUT",
@@ -72,7 +70,6 @@ export default function useSupervisors() {
 
       const supervisor = supervisors.find((s) => s.id === supervisorUserId);
 
-      // Update students list locally
       setStudents((prev) =>
         prev.map((s) =>
           s.userId === studentUserId
@@ -87,7 +84,7 @@ export default function useSupervisors() {
         )
       );
 
-      // Update supervisor student counts
+      // Recompute student counts
       setSupervisors((prev) =>
         prev.map((sup) => {
           const count = students.filter((st) =>
@@ -99,19 +96,17 @@ export default function useSupervisors() {
         })
       );
 
-      showToast(
-        `Supervisor ${supervisor?.name || ""} assigned successfully!`
-      );
+      showToast(`${supervisor?.name || "Supervisor"} assigned successfully!`);
     } catch (err) {
       showToast("Failed to assign: " + err.message, "error");
+    } finally {
+      setAssigningId(null);
     }
   };
 
   return {
-    supervisors,
-    students,
-    toast,
-    loading,
+    supervisors, students, toast,
+    loading, assigningId,
     assignSupervisor,
   };
 }

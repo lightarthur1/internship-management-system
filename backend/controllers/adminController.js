@@ -8,7 +8,9 @@ const InternshipLetter = require('../models/InternshipLetter');
 // @GET /api/admin/opportunities
 const getOpportunities = async (req, res, next) => {
   try {
-    const opportunities = await Opportunity.find().sort('-createdAt');
+    const opportunities = await Opportunity.find()
+    .select('-logo')
+    .sort('-createdAt');
     res.status(200).json({ success: true, count: opportunities.length, opportunities });
   } catch (err) { next(err); }
 };

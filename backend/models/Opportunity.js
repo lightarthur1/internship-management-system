@@ -51,4 +51,7 @@ const opportunitySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model('Opportunity', opportunitySchema);
+opportunitySchema.index({ createdAt: -1 });
+
+const Opportunity = mongoose.model('Opportunity', opportunitySchema);
+module.exports = Opportunity;

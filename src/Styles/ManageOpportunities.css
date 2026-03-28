@@ -1,7 +1,9 @@
 .manage-container{
-  padding:0px;
-  background-color: rgb(242, 245, 247);
-  height: 100vh;
+  min-height: 100vh; /* Ensures background covers at least the full screen */
+  background-color: rgb(245, 249, 249); /* The light gray from your UI */
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 50px; /* Space at the very bottom so cards don't hit the edge */
 }
 
 .manage-opp-nav{
@@ -65,9 +67,11 @@
   margin-bottom:5px;
 }
 
-.opportunity-grid{
+.opportunity-grid {
+  /* height: 100vh; <-- DELETE THIS LINE */
   padding: 30px;
-  display:flex;
-  gap:24px;
-  flex-wrap:wrap;
+  display: grid; /* Use grid for better alignment */
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); 
+  gap: 24px;
+  width: 100%;
 }

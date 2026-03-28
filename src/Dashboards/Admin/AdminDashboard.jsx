@@ -42,7 +42,7 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className='Admin'>
+    <div className='admin'>
       <div className="admin-navbar">
         <div className="admin-nav-logo">
           <div className="logo"><Layout size={50} /></div>

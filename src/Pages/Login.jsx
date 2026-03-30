@@ -80,7 +80,7 @@ const Login = () => {
           </div>
 
           <button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Signing in…' : <><span>Sign In</span> <ArrowRight size={18} /></>}
+            {loading ? 'Signing in…' : <><span>Sign In</span> </>}
           </button>
         </form>
 

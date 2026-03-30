@@ -1,18 +1,23 @@
-.admin-review-card{
+.admin-review-card {
   background-color: rgb(255, 255, 255);
-  height: 10rem;
-  width: 20rem;
+  /* --- CHANGED: Flexible heights and widths --- */
+  min-height: 10rem; 
+  height: auto;
+  width: 100%;       /* Allow the grid to decide the width */
+  max-width: 22rem;  /* Prevents them from getting too huge on desktop */
   border: 1px solid rgba(154, 154, 159, 0.429);
   border-radius: 15px;
+  box-sizing: border-box; /* CRITICAL: Keeps padding inside the card */
+  margin: 0 auto;
 }
 
 .card-header {
-  color: #444; 
+  color: #444;
   display: flex;
-  justify-content: space-between; 
+  justify-content: space-between;
   align-items: center;
   width: 100%;
-  margin-bottom: 50px;
+  margin-bottom: 30px; /* Reduced from 50px for better mobile fit */
 }
 
 .card-header p {
@@ -31,13 +36,56 @@
 
 
 
-
-.card-info{
+.card-info {
   display: flex;
   flex-direction: column;
-  justify-content: space-between; 
+  justify-content: space-between;
   height: 100%;
-  padding: 20px; 
+  padding: 20px;
   border-radius: 15px;
+  box-sizing: border-box;
+}
 
+
+@media (max-width: 768px) {
+  .admin-review-card {
+    min-height: 8rem; /* Slightly shorter on mobile */
+  }
+
+  .card-header {
+    margin-bottom: 20px;
+  }
+
+  .card-header p {
+    font-size: 0.85rem; /* Better fit for narrow screens */
+  }
+
+  .number {
+    font-size: 1.75rem; /* Slightly smaller number for mobile */
+  }
+}
+
+/* --- 2. The 1237px Range (Small Laptops/Tablets) --- */
+@media (min-width: 769px) and (max-width: 1300px) {
+  .admin-review-card {
+    /* Ensures cards don't look squashed in a 2-column layout */
+    padding: 5px; 
+  }
+  
+  .number {
+    font-size: 1.8rem;
+  }
+}
+
+/* --- 3. High-Density Screen Fix --- */
+@media (max-width: 380px) {
+  /* Extra small Androids */
+  .card-header {
+    flex-direction: row;
+    gap: 5px;
+  }
+  
+  .number {
+    font-size: 1.5rem;
+  }
 }

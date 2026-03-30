@@ -121,7 +121,7 @@ const getMe = async (req, res, next) => {
 // Workplace supervisor clicks invite link → sets password and activates account
 const acceptInvite = async (req, res, next) => {
   try {
-    const { token, password } = req.body;
+    const { token, password, name } = req.body;
 
     const user = await User.findOne({
       inviteToken: token,
@@ -133,6 +133,8 @@ const acceptInvite = async (req, res, next) => {
     }
 
     user.password = password;
+    if (name) user.name = name; // Update "Pending Supervisor" to their real name
+
     user.inviteToken = undefined;
     user.inviteTokenExpiry = undefined;
     user.isInviteAccepted = true;

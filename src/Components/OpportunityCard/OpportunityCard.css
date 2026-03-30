@@ -1,13 +1,17 @@
-.opportunity-card{
-  background:rgb(255, 255, 255);
-  border:1px solid #e5e7eb;
-  border-radius:16px;
-  padding:10px;
-  width:400px;
+.opportunity-card {
+  background: rgb(255, 255, 255);
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 15px; /* Increased slightly for better spacing */
+  width: 100%;    /* Changed from 400px to 100% */
+  max-width: 400px; /* Limits size on desktop */
   height: auto;
-  box-shadow:0 2px 4px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
   overflow: hidden;
+  box-sizing: border-box; /* Ensures padding doesn't break the width */
+  margin: 0 auto; /* Centers cards when they stack */
 }
+
 
 .card-header{
   display:flex;
@@ -115,4 +119,62 @@
 
 .delete-btn:hover{
   background: #ad2542;
+}
+
+
+
+/* --- 1. Mobile (Android/iPhone up to 480px) --- */
+@media (max-width: 480px) {
+  .opportunity-card {
+    max-width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .card-header {
+    gap: 10px;
+  }
+
+  .company-logo, .company-emoji-mark {
+    width: 35px;
+    height: 35px;
+    font-size: 18px;
+  }
+
+  .card-actions {
+    flex-direction: column; /* Stack Edit and Delete buttons on small phones */
+    gap: 8px;
+  }
+
+  .edit-btn, .delete-btn {
+    width: 100%;
+    padding: 12px; /* Larger tap target for fingers */
+    font-size: 16px;
+  }
+}
+
+/* --- 2. The 600px Range (Large Phones & Small Tablets) --- */
+@media (min-width: 481px) and (max-width: 768px) {
+  .opportunity-card {
+    max-width: 450px; /* Allow slightly wider cards for tablet feel */
+  }
+}
+
+/* --- 3. The 1237px Range (Your screenshot resolution) --- */
+@media (min-width: 769px) and (max-width: 1300px) {
+  .opportunity-card {
+    /* At 1237px, if you have 2 columns, 400px is perfect */
+    max-width: 400px; 
+  }
+}
+
+/* --- 4. Touch Device Optimization --- */
+@media (pointer: coarse) {
+  .edit-btn, .delete-btn {
+    min-height: 44px; /* Standard touch-friendly height */
+  }
+  
+  .opportunity-card:hover {
+    transform: none; /* Disable lift effect on touch to prevent jumpy scrolling */
+  }
 }

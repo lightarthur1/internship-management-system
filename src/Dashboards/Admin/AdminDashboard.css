@@ -1,24 +1,26 @@
-.admin{
-  height: 100vh;      /* Force height to exactly the screen height */
-  overflow: hidden;   /* Disable the main body scroll */
+.admin {
+  min-height: 100vh; /* Changed from height to min-height for mobile scroll */
+  height: auto;      /* Allow it to grow on mobile */
+  overflow: auto;    /* Enable scrolling when content stacks */
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  padding: 10px;     /* Reduced padding for smaller screens */
   box-sizing: border-box;
+  background-color: rgb(245, 249, 249); /* Light gray background */
+
 }
 
-.admin-navbar{
-  background: linear-gradient(to right,#004D36,rgb(28, 79, 19));
+.admin-navbar {
+  background: linear-gradient(to right, #004D36, rgb(28, 79, 19));
   width: 100%;
-  height: 5.5rem;
-   box-shadow: 0px 5px 10px rgb(180, 178, 178);
-}
-
-.admin-navbar{
+  height: auto;      /* Allow it to wrap on very small screens */
+  min-height: 4rem;
+  box-shadow: 0px 5px 10px rgb(180, 178, 178);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
+  padding: 10px 15px;
+  box-sizing: border-box;
 }
 
 .admin-nav-logo{
@@ -117,4 +119,157 @@ padding: 30px;
   max-width: 1200px;
   justify-content: center;
   align-items: center;
+}
+
+
+
+
+@media (max-width: 600px) {
+  .admin-navbar {
+    flex-direction: row; /* Keep logo and logout side-by-side */
+  }
+
+  .header h1 {
+    font-size: 1.2rem; /* Shrink logo text */
+  }
+
+  /* Stack the Statistic Cards in 1 column */
+  .cards-container {
+    grid-template-columns: 1fr; 
+    padding: 15px;
+    gap: 15px;
+  }
+
+  /* Stack Quick Action Cards in 1 column */
+  .quick-action-cards-wrapper {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .quick-action-container {
+    padding: 20px;
+  }
+
+  .quick-action-container > p {
+    font-size: 1.2rem;
+    text-align: center;
+  }
+  
+  .logout-btn {
+    width: 80px; /* Smaller button for mobile */
+    font-size: 0.8rem;
+  }
+}
+
+/* 2. Tablets (iPad Portrait/Landscape) */
+@media (min-width: 601px) and (max-width: 1024px) {
+  /* 2 columns for Statistic Cards */
+  .cards-container {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 20px;
+  }
+
+  /* 2 columns for Quick Action Cards */
+  .quick-action-cards-wrapper {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 3. Large Desktop (Original settings) */
+@media (min-width: 1025px) {
+  .cards-container {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .quick-action-cards-wrapper {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .admin {
+    height: 100vh;
+    overflow: hidden; /* Restore your original "no-scroll" desktop feel */
+  }
+}
+
+
+/* --- 1. Small Mobile (iPhone/Android Phones) --- */
+@media (max-width: 500px) {
+  .admin {
+    height: auto; /* Allow scrolling */
+    overflow: visible; 
+    padding: 10px;
+  }
+
+  .admin-navbar {
+    flex-direction: column; /* Stack logo and logout */
+    height: auto;
+    gap: 15px;
+    padding: 20px 10px;
+  }
+
+  /* Stack Statistic Cards vertically */
+  .cards-container {
+    grid-template-columns: 1fr; 
+    padding: 10px;
+    gap: 15px;
+  }
+
+  /* Stack Quick Action Cards vertically */
+  .quick-action-cards-wrapper {
+    grid-template-columns: 1fr;
+    padding: 0 10px;
+  }
+
+  .quick-action-container {
+    padding: 20px 10px;
+  }
+}
+
+/* --- 2. Tablets & Small Laptops (Your screenshot range: 501px to 1240px) --- */
+@media (min-width: 501px) and (max-width: 1240px) {
+  /* Show 2 stats per row instead of 4 */
+  .cards-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 20px;
+  }
+
+  /* Show 2 quick actions per row instead of 3 */
+  .quick-action-cards-wrapper {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 900px;
+    margin: 0 auto;
+  }
+}
+
+/* --- 3. Large Desktop (1241px and up) --- */
+@media (min-width: 1241px) {
+  .cards-container {
+    grid-template-columns: repeat(4, 1fr); /* Back to your original 4-column layout */
+  }
+
+  .quick-action-cards-wrapper {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* --- Tablets and Small Laptops (The 1237px range) --- */
+@media (min-width: 769px) and (max-width: 1300px) {
+  .admin {
+    overflow-y: auto;   /* Enable vertical scroll if content is tall */
+    height: auto;       /* Let the container grow with the cards */
+    min-height: 100vh;
+  }
+
+  .cards-container {
+    grid-template-columns: repeat(2, 1fr) !important; /* Force 2 columns */
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .quick-action-cards-wrapper {
+    grid-template-columns: repeat(2, 1fr) !important; /* 2 actions per row */
+    max-width: 900px;
+    margin: 0 auto;
+  }
 }

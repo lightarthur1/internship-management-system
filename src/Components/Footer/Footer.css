@@ -1,8 +1,32 @@
 .footer {
-    padding: 4rem 0;
-    border-top: 1px solid var(--border);
-    text-align: center;
-    color: var(--text-muted);
-    background-color: white;
+  /* Use relative padding for better scaling */
+  padding: 3rem 1rem; 
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: var(--text-muted);
+  background-color: white;
+  width: 100%;
+  box-sizing: border-box; /* Ensures the 1rem side padding doesn't cause a black gap */
 }
 
+/* --- 1. Mobile (Android/iPhone up to 480px) --- */
+@media (max-width: 480px) {
+  .footer {
+    padding: 2rem 15px; /* Significantly reduced vertical space for phones */
+    font-size: 0.85rem;  /* Slightly smaller text to fit more on screen */
+  }
+}
+
+/* --- 2. The 600px - 1024px Range (Tablets/iPads) --- */
+@media (min-width: 481px) and (max-width: 1024px) {
+  .footer {
+    padding: 2.5rem 20px;
+  }
+}
+
+/* --- 3. The 1237px Range (Small Laptops) --- */
+@media (min-width: 1025px) and (max-width: 1300px) {
+  .footer {
+    padding: 3rem 0; /* Returns closer to your original desktop look */
+  }
+}

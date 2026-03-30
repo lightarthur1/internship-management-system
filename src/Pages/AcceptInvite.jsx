@@ -12,12 +12,17 @@ export default function AcceptInvite() {
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
     setError("");
+    if (!name.trim()) {
+       setError("Please enter your full name.");
+       return;
+    }
     if (password.length < 6) {
       setError("Password must be at least 6 characters.");
       return;
@@ -36,7 +41,7 @@ export default function AcceptInvite() {
       const res = await fetch(`${API}/auth/accept-invite`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ token, password, name }), // Sending name to backend
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.message || "Could not accept invite.");
@@ -95,8 +100,29 @@ export default function AcceptInvite() {
           </div>
         )}
 
-        <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
-          New password
+
+        <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6, color: "#374151" }}>
+          Full Name
+        </label>
+      <input
+  type="text"
+  placeholder="e.g. John Doe"
+  value={name}
+  onChange={(e) => setName(e.target.value)}
+  style={{
+    width: "100%",
+    padding: "10px 12px",
+    borderRadius: 8,
+    border: "1px solid #e5e7eb",
+    marginBottom: 16,
+    boxSizing: "border-box",
+    background: "#fff",
+    color: "#000"
+  }}
+/>
+
+        <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6,color: "#374151" }}>
+          Password
         </label>
         <input
           type="password"
@@ -109,10 +135,13 @@ export default function AcceptInvite() {
             border: "1px solid #e5e7eb",
             marginBottom: 16,
             boxSizing: "border-box",
+            background: "#ffffff", // Force white background
+            color: "#111827",      // Force dark text
+            fontSize: "14px"
           }}
         />
 
-        <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
+        <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6,color: "#374151" }}>
           Confirm password
         </label>
         <input
@@ -126,6 +155,9 @@ export default function AcceptInvite() {
             border: "1px solid #e5e7eb",
             marginBottom: 20,
             boxSizing: "border-box",
+            background: "#ffffff", // Force white background
+            color: "#111827",      // Force dark text
+            fontSize: "14px"
           }}
         />
 

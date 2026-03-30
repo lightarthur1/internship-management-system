@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, Check } from "lucide-react";
-import "./SupervisorDropdown.css";
+import "./SupervisorDropDown.css";
 
 const SupervisorDropdown = ({ supervisors, selectedId, onSelect }) => {
   const [open, setOpen] = useState(false);

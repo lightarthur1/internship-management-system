@@ -479,57 +479,51 @@ const StudentsPage = ({ onNavigate, showToast, students, onOpenStudentReports })
         <input className="s-input" placeholder="Search by name, company or department…" value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
-      {filtered.map(s => (
-        <div key={s.id} className="student-row fade-up">
-          <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:12, flexWrap:"wrap" }}>
-            {/* Avatar + info */}
-            <div style={{ display:"flex", gap:14, flex:1, minWidth:0 }}>
-              <div style={{ width:44, height:44, borderRadius:"50%", background:"#e6f4ec", border:"2px solid #15653a33", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, fontWeight:800, color:"#15653a", flexShrink:0 }}>
-                {s.name.split(" ").map(w => w[0]).slice(0,2).join("")}
-              </div>
-              <div style={{ minWidth:0 }}>
-                <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:4 }}>
-                  <p style={{ fontSize:15, fontWeight:700, color:"#111827" }}>{s.name}</p>
-                  {s.pending > 0 && <span className="badge ba">{s.pending} pending</span>}
-                  {s.started && <span className="badge bg"><Ic icon={CheckCircle} size={10} color="#15803d" />Active</span>}
-                </div>
-                <p style={{ fontSize:12, color:"#6b7280", marginBottom:3 }}>{s.studentId} · {s.dept} · {s.level}</p>
-                <p style={{ fontSize:12, color:"#6b7280", display:"flex", alignItems:"center", gap:4 }}>
-                  <Ic icon={Building2} size={11} color="#9ca3af" />{s.company}
-                  <span style={{ margin:"0 4px", color:"#d1d5db" }}>·</span>
-                  <Ic icon={MapPin} size={11} color="#9ca3af" />{s.location}
-                </p>
-              </div>
-            </div>
+ {filtered.map(s => (
+  <div key={s.id} className="student-row fade-up">
 
-            {/* Reports progress + button */}
-            <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:8, flexShrink:0 }}>
-              <div style={{ textAlign:"right" }}>
-                <p style={{ fontSize:11, color:"#9ca3af", marginBottom:4 }}>Reports Submitted</p>
-                <p style={{ fontSize:13, fontWeight:700, color:"#111827" }}>{s.reports}</p>
-              </div>
-              <div style={{ display:"flex", flexWrap:"wrap", gap:8, justifyContent:"flex-end" }}>
-                <button
-                  type="button"
-                  className="btn-g"
-                  style={{ fontSize:12, padding:"7px 12px" }}
-                  onClick={() => setSelected(s)}
-                >
-                  Summary
-                </button>
-                <button
-                  type="button"
-                  className="btn-og"
-                  style={{ fontSize:12, padding:"7px 14px" }}
-                  onClick={() => onOpenStudentReports?.(s.id)}
-                >
-                  <Ic icon={Eye} size={13} />View Reports
-                </button>
-              </div>
-            </div>
-          </div>
+    {/* Row 1: Avatar + name + badges */}
+    <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
+      <div style={{ width:40, height:40, borderRadius:"50%", background:"#e6f4ec", border:"2px solid #15653a33", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:800, color:"#15653a", flexShrink:0 }}>
+        {s.name.split(" ").map(w => w[0]).slice(0,2).join("")}
+      </div>
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap", marginBottom:2 }}>
+          <p style={{ fontSize:15, fontWeight:700, color:"#111827", margin:0 }}>{s.name}</p>
+          {s.pending > 0 && <span className="badge ba">{s.pending} pending</span>}
+          {s.started && <span className="badge bg"><Ic icon={CheckCircle} size={10} color="#15803d" />Active</span>}
         </div>
-      ))}
+        <p style={{ fontSize:12, color:"#6b7280", margin:0 }}>{s.studentId} · {s.dept} · {s.level}</p>
+      </div>
+    </div>
+
+    {/* Row 2: Company + location */}
+    <div style={{ display:"flex", alignItems:"center", gap:4, fontSize:12, color:"#6b7280", marginBottom:12, paddingLeft:50, flexWrap:"wrap" }}>
+      <Ic icon={Building2} size={11} color="#9ca3af" />
+      <span>{s.company}</span>
+      <span style={{ color:"#d1d5db" }}>·</span>
+      <Ic icon={MapPin} size={11} color="#9ca3af" />
+      <span>{s.location}</span>
+    </div>
+
+    {/* Row 3: Reports count + buttons — full width */}
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8 }}>
+      <div>
+        <p style={{ fontSize:11, color:"#9ca3af", margin:"0 0 2px" }}>Reports Submitted</p>
+        <p style={{ fontSize:14, fontWeight:700, color:"#111827", margin:0 }}>{s.reports}</p>
+      </div>
+      <div style={{ display:"flex", gap:8, flexShrink:0 }}>
+        <button type="button" className="btn-g" style={{ fontSize:12, padding:"7px 12px" }} onClick={() => setSelected(s)}>
+          Summary
+        </button>
+        <button type="button" className="btn-og" style={{ fontSize:12, padding:"7px 12px" }} onClick={() => onOpenStudentReports?.(s.id)}>
+          <Ic icon={Eye} size={13} />View Reports
+        </button>
+      </div>
+    </div>
+
+  </div>
+))}
 
       {/* Student detail modal */}
       {selected && (

@@ -1,275 +1,178 @@
-.admin {
-  min-height: 100vh; /* Changed from height to min-height for mobile scroll */
-  height: auto;      /* Allow it to grow on mobile */
-  overflow: auto;    /* Enable scrolling when content stacks */
+/* ═══════════════════════════════════════════════════════════════
+   AdminDashboard.css  — fully responsive
+═══════════════════════════════════════════════════════════════ */
+
+.Admin {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 10px;     /* Reduced padding for smaller screens */
+  background-color: #f5f9f9;
   box-sizing: border-box;
-  background-color: rgb(245, 249, 249); /* Light gray background */
-
 }
 
+/* ── Navbar ── */
 .admin-navbar {
-  background: linear-gradient(to right, #004D36, rgb(28, 79, 19));
+  background: linear-gradient(to right, #004d36, #1c4f13);
   width: 100%;
-  height: auto;      /* Allow it to wrap on very small screens */
   min-height: 4rem;
-  box-shadow: 0px 5px 10px rgb(180, 178, 178);
+  box-shadow: 0 5px 10px rgba(180,178,178,0.4);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 15px;
+  padding: 10px 24px;
   box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.admin-nav-logo{
+.admin-nav-logo {
   display: flex;
-  justify-content: center;
   align-items: center;
   gap: 10px;
 }
 
-.admin-header{
+.admin-header {
   display: flex;
   flex-direction: column;
-  padding: 5px;
 }
 
-.header{
-  text-align: center;
-  line-height: 20px;
+.header {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
 }
 
-.logo{
+.sub-title {
+  color: rgba(255,255,255,0.55);
+  font-size: 11px;
+  margin: 2px 0 0;
+}
+
+.logo {
   display: flex;
-  background-color: rgba(36, 67, 48, 0.203);
+  background-color: rgba(36,67,48,0.2);
   justify-content: center;
   align-items: center;
-  overflow: hidden;
-  border-radius: 5px;
+  border-radius: 8px;
+  padding: 4px;
+  color: #fff;
 }
 
-.logout-btn{
-  height: 40px;
-  width: 100px;
-   background-color:transparent;
+.btn-div {
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 10px;
-  border: 1px solid;
+}
+
+.logout-btn {
+  height: 38px;
+  padding: 0 16px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid rgba(255,255,255,0.3);
   border-radius: 10px;
-
-
-  transition: all 0.3s ease; 
+  color: #fff;
+  font-size: 13px;
   font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
 }
 
 .logout-btn:hover {
-  background: rgba(255, 255, 255, 0.15); 
-  border-color: #ffffff; 
-  transform: translateY(-1px); 
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: rgba(255,255,255,0.12);
+  transform: translateY(-1px);
 }
 
-
-.logout-btn:active {
-  transform: translateY(0); 
-  background: rgba(255, 255, 255, 0.25);
+/* ── Page container ── */
+.admin-page-container {
+  flex: 1;
+  background-color: #f5f9f9;
+  overflow-y: auto;
 }
 
-.btn-div{
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.admin-page-container{
-  background-color: rgb(245, 249, 249);
-  height: 100vh;
-}
-
-.cards-container{
-  width: 100%;
+/* ── Stat cards grid ── */
+.cards-container {
   display: grid;
-grid-template-columns: repeat(4, 1fr);  
-padding: 30px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  padding: 28px 28px 0;
 }
 
+/* ── Quick actions ── */
 .quick-action-container {
-  padding: 40px;
-  background-color:rgb(245, 249, 249);
-   /* Light sage background from UI */
-
+  padding: 28px;
 }
 
 .quick-action-container > p {
-  font-size: 1.5rem;
-  font-weight: 500;
-  color: #000;
-  margin-bottom: 20px;
-  text-align: left;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 18px;
 }
 
 .quick-action-cards-wrapper {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); 
-  gap: 25px; 
-  max-width: 1200px;
-  justify-content: center;
-  align-items: center;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
 }
 
+/* ══════════ RESPONSIVE ══════════ */
 
+/* Tablet — 2 columns */
+@media (max-width: 1024px) {
+  .cards-container {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 20px 20px 0;
+    gap: 16px;
+  }
+  .quick-action-cards-wrapper {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  .quick-action-container {
+    padding: 20px;
+  }
+}
 
-
+/* Mobile — 1 column */
 @media (max-width: 600px) {
   .admin-navbar {
-    flex-direction: row; /* Keep logo and logout side-by-side */
+    padding: 10px 14px;
   }
-
-  .header h1 {
-    font-size: 1.2rem; /* Shrink logo text */
+  .header {
+    font-size: 13px;
   }
-
-  /* Stack the Statistic Cards in 1 column */
-  .cards-container {
-    grid-template-columns: 1fr; 
-    padding: 15px;
-    gap: 15px;
+  .sub-title {
+    display: none;
   }
-
-  /* Stack Quick Action Cards in 1 column */
-  .quick-action-cards-wrapper {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-
-  .quick-action-container {
-    padding: 20px;
-  }
-
-  .quick-action-container > p {
-    font-size: 1.2rem;
-    text-align: center;
-  }
-  
   .logout-btn {
-    width: 80px; /* Smaller button for mobile */
-    font-size: 0.8rem;
+    padding: 0 10px;
+    font-size: 12px;
+    height: 34px;
   }
-}
-
-/* 2. Tablets (iPad Portrait/Landscape) */
-@media (min-width: 601px) and (max-width: 1024px) {
-  /* 2 columns for Statistic Cards */
   .cards-container {
     grid-template-columns: repeat(2, 1fr);
-    padding: 20px;
+    padding: 14px 14px 0;
+    gap: 12px;
   }
-
-  /* 2 columns for Quick Action Cards */
-  .quick-action-cards-wrapper {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* 3. Large Desktop (Original settings) */
-@media (min-width: 1025px) {
-  .cards-container {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .quick-action-cards-wrapper {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  
-  .admin {
-    height: 100vh;
-    overflow: hidden; /* Restore your original "no-scroll" desktop feel */
-  }
-}
-
-
-/* --- 1. Small Mobile (iPhone/Android Phones) --- */
-@media (max-width: 500px) {
-  .admin {
-    height: auto; /* Allow scrolling */
-    overflow: visible; 
-    padding: 10px;
-  }
-
-  .admin-navbar {
-    flex-direction: column; /* Stack logo and logout */
-    height: auto;
-    gap: 15px;
-    padding: 20px 10px;
-  }
-
-  /* Stack Statistic Cards vertically */
-  .cards-container {
-    grid-template-columns: 1fr; 
-    padding: 10px;
-    gap: 15px;
-  }
-
-  /* Stack Quick Action Cards vertically */
   .quick-action-cards-wrapper {
     grid-template-columns: 1fr;
-    padding: 0 10px;
+    gap: 12px;
   }
-
   .quick-action-container {
-    padding: 20px 10px;
+    padding: 14px;
+  }
+  .quick-action-container > p {
+    font-size: 1.1rem;
   }
 }
 
-/* --- 2. Tablets & Small Laptops (Your screenshot range: 501px to 1240px) --- */
-@media (min-width: 501px) and (max-width: 1240px) {
-  /* Show 2 stats per row instead of 4 */
+@media (max-width: 380px) {
   .cards-container {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    padding: 20px;
-  }
-
-  /* Show 2 quick actions per row instead of 3 */
-  .quick-action-cards-wrapper {
-    grid-template-columns: repeat(2, 1fr);
-    max-width: 900px;
-    margin: 0 auto;
-  }
-}
-
-/* --- 3. Large Desktop (1241px and up) --- */
-@media (min-width: 1241px) {
-  .cards-container {
-    grid-template-columns: repeat(4, 1fr); /* Back to your original 4-column layout */
-  }
-
-  .quick-action-cards-wrapper {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-/* --- Tablets and Small Laptops (The 1237px range) --- */
-@media (min-width: 769px) and (max-width: 1300px) {
-  .admin {
-    overflow-y: auto;   /* Enable vertical scroll if content is tall */
-    height: auto;       /* Let the container grow with the cards */
-    min-height: 100vh;
-  }
-
-  .cards-container {
-    grid-template-columns: repeat(2, 1fr) !important; /* Force 2 columns */
-    gap: 20px;
-    padding: 20px;
-  }
-
-  .quick-action-cards-wrapper {
-    grid-template-columns: repeat(2, 1fr) !important; /* 2 actions per row */
-    max-width: 900px;
-    margin: 0 auto;
+    grid-template-columns: 1fr;
   }
 }

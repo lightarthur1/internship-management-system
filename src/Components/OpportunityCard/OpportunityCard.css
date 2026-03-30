@@ -1,27 +1,40 @@
+/* ═══════════════════════════════════════════════════════════════
+   OpportunityCard.css — fully responsive
+═══════════════════════════════════════════════════════════════ */
+
 .opportunity-card {
-  background: rgb(255, 255, 255);
+  background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 15px; /* Increased slightly for better spacing */
-  width: 100%;    /* Changed from 400px to 100% */
-  max-width: 400px; /* Limits size on desktop */
-  height: auto;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-  overflow: hidden;
-  box-sizing: border-box; /* Ensures padding doesn't break the width */
-  margin: 0 auto; /* Centers cards when they stack */
+  border-radius: 14px;
+  padding: 20px;
+  width: 100%;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  box-sizing: border-box;
+  transition: box-shadow 0.2s, transform 0.15s;
 }
 
-
-.card-header{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin-bottom:5px;
+.opportunity-card:hover {
+  box-shadow: 0 6px 20px rgba(0,0,0,0.09);
+  transform: translateY(-2px);
 }
 
-.company-icon{
-  color:#2563eb;
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.card-header h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.company-icon {
+  color: #2563eb;
+  flex-shrink: 0;
 }
 
 .company-logo {
@@ -42,139 +55,114 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
   flex-shrink: 0;
 }
 
-.card-info{
-  margin-bottom:10px;
-  background-color: rgb(255, 255, 255);
+.card-info {
+  margin-bottom: 8px;
 }
 
-.label{
-  font-size:14px;
-  color:#6b7280;
-  margin-top:10px;
+.label {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 10px 0 2px;
 }
 
-.value{
-  font-weight:500;
-  margin-top:2px;
-  color: black;
+.value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  margin: 0;
 }
 
-.card-meta{
-  display:flex;
-  justify-content:space-between;
-  margin-top:14px;
+.card-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 14px;
+  gap: 12px;
 }
 
-.card-actions{
-  display:flex;
-  gap:12px;
-  margin-top:20px;
+.card-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
 }
 
-.edit-btn{
-  flex:1;
-  border:1px solid #d1d5db;
-  background:white;
-  color: black;
+.edit-btn {
+  flex: 1;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
   font-family: inherit;
   font-weight: 500;
-  padding:10px;
-  border-radius:10px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:6px;
-  cursor:pointer;
-
-  transition: all 0.2s cubic-bezier(0.8, 0.25, 0.8, 1);
+  font-size: 14px;
+  padding: 10px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  min-height: 40px;
 }
 
-.edit-btn:hover{
+.edit-btn:hover {
   background: #14532d;
-  color: white;
+  color: #fff;
+  border-color: #14532d;
 }
 
-.delete-btn{
-  flex:1;
-  border:none;
-  background:#e11d48;
-  color:white;
+.delete-btn {
+  flex: 1;
+  border: none;
+  background: #e11d48;
+  color: #fff;
   font-family: inherit;
   font-weight: 500;
-  padding:10px;
-  border-radius:10px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:6px;
-  cursor:pointer;
-
- transition: all 0.3s cubic-bezier(0.8, 0.25, 0.8, 1);
+  font-size: 14px;
+  padding: 10px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+  min-height: 40px;
 }
 
-.delete-btn:hover{
+.delete-btn:hover {
   background: #ad2542;
 }
 
+/* ══════════ RESPONSIVE ══════════ */
 
-
-/* --- 1. Mobile (Android/iPhone up to 480px) --- */
 @media (max-width: 480px) {
   .opportunity-card {
-    max-width: 100%;
-    padding: 12px;
+    padding: 16px;
     border-radius: 12px;
   }
-
-  .card-header {
-    gap: 10px;
-  }
-
-  .company-logo, .company-emoji-mark {
-    width: 35px;
-    height: 35px;
-    font-size: 18px;
-  }
-
   .card-actions {
-    flex-direction: column; /* Stack Edit and Delete buttons on small phones */
+    flex-direction: row; /* keep side by side even on mobile */
     gap: 8px;
   }
-
-  .edit-btn, .delete-btn {
-    width: 100%;
-    padding: 12px; /* Larger tap target for fingers */
-    font-size: 16px;
+  .edit-btn,
+  .delete-btn {
+    font-size: 13px;
+    padding: 10px 8px;
   }
 }
 
-/* --- 2. The 600px Range (Large Phones & Small Tablets) --- */
-@media (min-width: 481px) and (max-width: 768px) {
-  .opportunity-card {
-    max-width: 450px; /* Allow slightly wider cards for tablet feel */
-  }
-}
-
-/* --- 3. The 1237px Range (Your screenshot resolution) --- */
-@media (min-width: 769px) and (max-width: 1300px) {
-  .opportunity-card {
-    /* At 1237px, if you have 2 columns, 400px is perfect */
-    max-width: 400px; 
-  }
-}
-
-/* --- 4. Touch Device Optimization --- */
+/* Touch screen — remove hover lift */
 @media (pointer: coarse) {
-  .edit-btn, .delete-btn {
-    min-height: 44px; /* Standard touch-friendly height */
-  }
-  
   .opportunity-card:hover {
-    transform: none; /* Disable lift effect on touch to prevent jumpy scrolling */
+    transform: none;
+  }
+  .edit-btn,
+  .delete-btn {
+    min-height: 44px;
   }
 }

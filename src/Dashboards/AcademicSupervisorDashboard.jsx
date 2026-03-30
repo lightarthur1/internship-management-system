@@ -216,22 +216,102 @@ const css = `
   .divider { height:1px; background:var(--border); margin:16px 0; }
   .empty { text-align:center; padding:40px 24px; background:#f9fafb; border:1px dashed #d1d5db; border-radius:14px; }
 
-  /* ── Responsive ── */
-  @media(max-width:768px){
-    .topnav { padding:0 16px; height:52px; }
-    .topnav-sub,.user-name { display:none; }
-    .page-wrap { padding:16px 14px 48px; }
-    .card-body { padding:18px; }
-    .info-grid { grid-template-columns:repeat(2,1fr); }
-    .nav-shortcuts { gap:10px; }
+  /* ══════════ RESPONSIVE ══════════ */
+
+  /* ── Large tablet / small laptop ── */
+  @media (max-width:1024px) {
+    .opp-grid { grid-template-columns:repeat(2,1fr) !important; }
+  }
+
+  /* ── Tablet (768px) ── */
+  @media (max-width:768px) {
+    .topnav { padding:0 14px; height:52px; }
+    .topnav-sub { display:none; }
+    .topnav-logo { font-size:13px; }
+    .user-name { display:none; }
+    .topnav-logout span.lbl { display:none; }
+    .topnav-logout { padding:7px 10px; }
+
+    .page-wrap { padding:14px 12px 48px; }
+    .card-body { padding:16px; }
+
+    /* info grid: 2 cols on tablet */
+    .info-grid { grid-template-columns:repeat(2,1fr); gap:14px; }
+
+    /* nav shortcuts: 1 row of 3 is fine at 768, shrink padding */
+    .nav-shortcuts { gap:8px; }
+    .shortcut-card { padding:14px 10px; gap:10px; }
+    .shortcut-name { font-size:13px; }
+    .shortcut-icon { width:38px; height:38px; }
+
+    /* stat chips stay 3-col */
     .stat-chips { gap:8px; }
-    .mb { padding:22px; }
+    .stat-chip { padding:12px 10px; }
+    .stat-chip-val { font-size:20px; }
+
+    /* modals */
+    .mb { padding:20px; max-width:96vw; }
+    .mbr { flex-direction:column !important; }
+    .mbr button { width:100% !important; }
+
+    /* opportunities */
+    .opp-grid { grid-template-columns:1fr !important; }
+
+    /* reports two-col */
+    .rep-two-col { grid-template-columns:1fr !important; }
+
+    /* status page meta grid */
+    .status-sg { grid-template-columns:repeat(2,1fr) !important; }
+
+    /* wizard */
+    .wizard-box { padding:24px 18px; }
   }
-  @media(max-width:540px){
-    .info-grid { grid-template-columns:1fr; }
-    .nav-shortcuts { grid-template-columns:1fr; }
-    .stat-chips { grid-template-columns:repeat(3,1fr); }
+
+  /* ── Small mobile (540px) ── */
+  @media (max-width:540px) {
+    .topnav { padding:0 10px; }
+    .topnav-logo { font-size:12px; }
+
+    .page-wrap { padding:12px 10px 44px; }
+
+    /* info grid: 1 col */
+    .info-grid { grid-template-columns:1fr; gap:12px; }
+
+    /* nav shortcuts: stack vertically */
+    .nav-shortcuts { grid-template-columns:1fr; gap:10px; }
+    .shortcut-card { padding:14px; gap:12px; }
+    .shortcut-name { font-size:14px; }
+    .shortcut-icon { width:42px; height:42px; }
+
+    /* stat chips stay 3-col but tighter */
+    .stat-chips { gap:6px; }
+    .stat-chip { padding:10px 8px; }
+    .stat-chip-val { font-size:18px; }
+    .stat-chip-lbl { font-size:10px; }
+
+    /* status page meta grid */
+    .status-sg { grid-template-columns:repeat(2,1fr) !important; }
+
+    .wizard-box { padding:20px 14px; }
+    .wiz-bar { gap:4px; margin-bottom:20px; }
   }
+
+  /* ── Extra small (380px) ── */
+  @media (max-width:380px) {
+    .topnav-logo { font-size:11px; }
+    .page-wrap { padding:10px 8px 36px; }
+    .card-body { padding:12px; }
+    .shortcut-card { padding:12px; gap:8px; }
+    .mb { padding:14px; }
+    .btn-p, .btn-g { font-size:13px; padding:9px 12px; }
+
+    /* nav shortcuts: still vertical, tighter */
+    .shortcut-name { font-size:13px; }
+
+    /* status meta: 1 col on very small screens */
+    .status-sg { grid-template-columns:1fr !important; }
+  }
+
 `;
 
 /* ── Helpers ──────────────────────────────────────────────────── */

@@ -1,40 +1,51 @@
+/* ═══════════════════════════════════════════════════════════════
+   ApproveLetters.css — fully responsive
+═══════════════════════════════════════════════════════════════ */
+
 .approve-container {
   min-height: 100vh;
   background: #f3f4f6;
   font-family: inherit;
 }
 
-/* Header */
+/* ── Header ── */
 .approve-nav {
-  background: #ffffff;
+  background: #fff;
   border-bottom: 1px solid #e5e7eb;
-  padding: 20px 32px;
+  padding: 20px 28px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
 .back-btn {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: none;
-  border: none;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
   font-size: 14px;
-  color: #6b7280;
+  font-weight: 500;
+  color: #374151;
   cursor: pointer;
-  padding: 0;
-  margin-bottom: 12px;
-  transition: color 0.2s;
+  padding: 8px 14px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  transition: background 0.15s, color 0.15s;
   font-family: inherit;
 }
 
 .back-btn:hover {
-  color: #111827;
+  background: #f0fdf4;
+  border-color: #15653a;
+  color: #15653a;
 }
 
 .page-title h1 {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   color: #111827;
-  margin: 0 0 4px 0;
+  margin: 0 0 4px;
 }
 
 .page-title p {
@@ -43,23 +54,22 @@
   margin: 0;
 }
 
-/* Content */
+/* ── Content ── */
 .approve-content {
-  padding: 32px;
+  padding: 28px;
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 36px;
 }
 
-/* Sections */
 .letters-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .section-title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
   color: #111827;
   margin: 0;
@@ -67,27 +77,61 @@
 
 .letters-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
 }
 
-/* Empty state */
+/* ── Empty state ── */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 0;
+  padding: 48px 24px;
   color: #9ca3af;
+  text-align: center;
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 14px;
 }
 
 .empty-title {
-  font-size: 16px;
-  font-weight: 500;
-  margin: 0 0 4px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+  margin: 10px 0 4px;
 }
 
 .empty-hint {
-  font-size: 14px;
+  font-size: 13px;
+  color: #9ca3af;
   margin: 0;
+}
+
+/* ══════════ RESPONSIVE ══════════ */
+
+@media (max-width: 768px) {
+  .approve-nav {
+    padding: 14px 16px;
+  }
+  .approve-content {
+    padding: 16px;
+    gap: 24px;
+  }
+  .letters-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .page-title h1 {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .approve-nav {
+    padding: 12px;
+  }
+  .section-title {
+    font-size: 15px;
+  }
 }

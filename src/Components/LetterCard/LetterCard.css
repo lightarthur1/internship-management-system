@@ -1,97 +1,81 @@
+/* ═══════════════════════════════════════════════════════════════
+   LetterCard.css — fully responsive
+═══════════════════════════════════════════════════════════════ */
+
 .letter-card {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   border: 1px solid #f3f4f6;
   display: flex;
   flex-direction: column;
   gap: 0;
+  box-sizing: border-box;
+  transition: box-shadow 0.2s;
 }
 
-/* Header */
+.letter-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.09);
+}
+
+/* ── Header ── */
 .letter-card-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   gap: 12px;
 }
 
 .letter-student-name {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   color: #111827;
-  margin: 0 0 4px 0;
+  margin: 0 0 3px;
 }
 
 .letter-student-meta {
-  font-size: 13px;
+  font-size: 12px;
   color: #6b7280;
   margin: 0;
 }
 
-/* Status badge */
+/* ── Status badge ── */
 .status-badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 12px;
+  padding: 3px 10px;
   border-radius: 999px;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
-.status-badge-pending {
-  background: #fef9ec;
-  color: #b45309;
-  border: 1px solid #fde68a;
-}
+.status-badge-pending  { background:#fef9ec; color:#b45309; border:1px solid #fde68a; }
+.status-badge-approved { background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; }
+.status-badge-rejected { background:#fee2e2; color:#c0143c; border:1px solid #fecaca; }
 
-.status-badge-approved {
-  background: #dcfce7;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
-}
-
-.status-badge-rejected {
-  background: #fee2e2;
-  color: #c0143c;
-  border: 1px solid #fecaca;
-}
-
-/* Details */
+/* ── Details ── */
 .letter-card-details {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin-bottom: 18px;
 }
 
-.letter-field {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
+.letter-field { display: flex; flex-direction: column; gap: 2px; }
+.letter-label { font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.04em; }
+.letter-value { font-size: 14px; font-weight: 600; color: #1f2937; }
 
-.letter-label {
-  font-size: 12px;
-  color: #9ca3af;
-}
-
-.letter-value {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-/* Actions */
+/* ── Actions ── */
 .letter-card-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   margin-top: auto;
+  flex-wrap: wrap;
 }
 
 .letter-btn {
@@ -102,38 +86,57 @@
   padding: 9px 14px;
   border-radius: 10px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   border: none;
-  transition: background 0.2s, opacity 0.2s;
+  transition: background 0.15s, opacity 0.15s;
   font-family: inherit;
   flex: 1;
+  min-height: 38px;
+  white-space: nowrap;
+}
+
+.letter-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .letter-btn-preview {
-  background: #ffffff;
+  background: #fff;
   border: 1px solid #e5e7eb;
   color: #374151;
 }
 
-.letter-btn-preview:hover {
-  background: #f9fafb;
-}
+.letter-btn-preview:hover:not(:disabled) { background: #f9fafb; }
 
 .letter-btn-approve {
   background: #16a34a;
-  color: #ffffff;
+  color: #fff;
 }
 
-.letter-btn-approve:hover {
-  background: #15803d;
-}
+.letter-btn-approve:hover:not(:disabled) { background: #15803d; }
 
 .letter-btn-reject {
   background: #c0143c;
-  color: #ffffff;
+  color: #fff;
 }
 
-.letter-btn-reject:hover {
-  background: #a01030;
+.letter-btn-reject:hover:not(:disabled) { background: #a01030; }
+
+/* ══════════ RESPONSIVE ══════════ */
+
+@media (max-width: 400px) {
+  .letter-card {
+    padding: 16px;
+  }
+  .letter-card-actions {
+    flex-direction: column;
+  }
+  .letter-btn {
+    width: 100%;
+  }
+}
+
+@media (pointer: coarse) {
+  .letter-btn { min-height: 44px; }
 }

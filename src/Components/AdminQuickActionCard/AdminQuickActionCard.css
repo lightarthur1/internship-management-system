@@ -1,181 +1,105 @@
-
+/* ═══════════════════════════════════════════════════════════════
+   AdminQuickActionCard.css — fully responsive
+═══════════════════════════════════════════════════════════════ */
 
 .quick-action-card {
-  background: #ffffff;
-  border-radius: 15px; /* Rounded corners */
-  padding: 30px 20px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 28px 22px;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Center content horizontally */
+  align-items: center;
   text-align: center;
   border: 1px solid #e5e7eb;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
   cursor: pointer;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .quick-action-card:hover {
-  /* Lifts the card up by 8px */
-  transform: translateY(-8px); 
-  
-  /* Adds a soft, deep shadow to simulate height */
-  box-shadow: 0 14px 28px rgba(0,0,0,0.1), 0 10px 10px rgba(0,0,0,0.08);
-  
-  /* Optional: slightly darken the border */
-  border-color: #d1d5db; 
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.09);
+  border-color: #d1d5db;
 }
 
-/* Button Hover Effect inside the card */
-
-
-
-
-/* Circular icon background */
 .quick-action-logo {
-  width: 70px;
-  height: 70px;
-  background-color: #e0e7ff; /* Light blue for Opportunities */
+  width: 64px;
+  height: 64px;
+  background-color: #e0e7ff;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 15px;
-  color: #3b82f6; /* Icon color */
+  margin-bottom: 16px;
+  color: #3b82f6;
+  flex-shrink: 0;
 }
 
 .quick-action-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: #111;
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: #111827;
 }
 
 .quick-action-sub-title {
-  font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 20px;
-  min-height: 40px; 
+  font-size: 0.84rem;
+  color: #6b7280;
+  margin: 0 0 20px;
+  min-height: 36px;
+  line-height: 1.5;
 }
 
-/* Dark Green Button */
 .quick-action-btn {
   width: 100%;
-  padding: 12px;
-  background-color: #004d36; /* Deep forest green */
-  color: white;
+  padding: 11px;
+  background-color: #004d36;
+  color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
-  margin-top: auto; /* Pushes button to bottom if content varies */
-
-  transition: background-color 0.2s ease;
+  margin-top: auto;
+  transition: background 0.2s;
+  font-family: inherit;
 }
 
 .quick-action-btn:hover {
-  background-color: #076836; /* Darkens the button when the card is hovered */
+  background-color: #076836;
 }
 
-/* --- 1. Mobile (Android / iPhone) --- */
-@media (max-width: 500px) {
+/* ══════════ RESPONSIVE ══════════ */
+
+@media (max-width: 600px) {
   .quick-action-card {
-    padding: 20px 15px; /* Reduce padding to save screen space */
-    margin-bottom: 15px; /* Add space between stacked cards */
-    width: 100%; /* Ensure card takes full width of container */
-    box-sizing: border-box;
+    padding: 20px 16px;
   }
-
   .quick-action-logo {
-    width: 60px;  /* Slightly smaller icons for mobile */
-    height: 60px;
+    width: 54px;
+    height: 54px;
   }
-
   .quick-action-title {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
-
   .quick-action-sub-title {
-    min-height: auto; /* Let text flow naturally on small screens */
-    margin-bottom: 15px;
+    min-height: auto;
     font-size: 0.8rem;
+    margin-bottom: 16px;
   }
-
   .quick-action-btn {
-    padding: 14px; /* Slightly larger button for easier tapping */
-    font-size: 16px; /* Prevents text from being too small */
+    padding: 13px;
+    font-size: 15px;
   }
 }
 
-/* --- 2. Tablets (iPad) --- */
-@media (min-width: 501px) and (max-width: 1024px) {
-  .quick-action-card {
-    padding: 25px 18px;
-  }
-  
-  .quick-action-title {
-    font-size: 1.05rem;
-  }
-}
-
-/* --- 3. Hover Fix for Touch Devices --- */
-@media (hover: none) {
-  /* On mobile/tablets, remove the 'translateY' lift because it can 
-     feel glitchy when scrolling with a finger */
-  .quick-action-card:hover {
-    transform: none;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Very light shadow only */
-  }
-}
-
-/* --- 1. Small Mobile (up to 480px) --- */
-/* iPhone, standard Android */
-@media (max-width: 480px) {
-  .quick-action-card {
-    padding: 20px;
-    width: 100%;
-    margin-bottom: 10px;
-  }
-  
-  .quick-action-logo {
-    width: 55px;
-    height: 55px;
-  }
-}
-
-/* --- 2. THE GAP: Large Mobile & Small Tablets (481px to 768px) --- */
-/* This handles the 600px range you mentioned! */
-@media (min-width: 481px) and (max-width: 768px) {
-  .quick-action-card {
-    padding: 25px;
-    /* On a 600px screen, we might want 2 cards per row 
-       if the parent container allows it */
-    min-height: 250px; 
-  }
-
-  .quick-action-title {
-    font-size: 1.05rem;
-  }
-  
-  .quick-action-sub-title {
-    font-size: 0.85rem;
-  }
-}
-
-/* --- 3. Tablets & iPads (769px to 1024px) --- */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .quick-action-card {
-    padding: 30px 20px;
-  }
-}
-
-/* --- 4. Touch Device Optimization --- */
+/* Touch screen — remove hover lift */
 @media (pointer: coarse) {
-  /* This targets Android/iPad touch screens specifically */
-  .quick-action-btn {
-    padding: 15px; /* Larger tap target for fingers */
-    font-size: 16px; /* Best for mobile readability */
-  }
-  
   .quick-action-card:hover {
-    transform: translateY(-4px); /* Smaller lift so it doesn't feel 'jumpy' on touch */
+    transform: translateY(-2px);
+  }
+  .quick-action-btn {
+    min-height: 44px;
   }
 }

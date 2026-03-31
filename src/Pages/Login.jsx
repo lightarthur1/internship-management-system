@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from "../Context/AuthContext";
-import { Layout, Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
+import { Layout, Mail, Lock, ArrowRight, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import '../Styles/Login.css';
 
 const roleRoutes = {
@@ -16,6 +16,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error,    setError]    = useState('');
   const [loading,  setLoading]  = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { login } = useAuth();
   const navigate  = useNavigate();
@@ -68,7 +69,16 @@ const Login = () => {
             <label>Password</label>
             <div className="input-wrapper">
               <Lock className="input-icon" size={18} />
-              <input type="password" placeholder="password" value={password} onChange={e => setPassword(e.target.value)} required />
+              <input type={showPassword ? "text" : "password"} placeholder="password" value={password} onChange={e => setPassword(e.target.value)} required />
+              {/* 3. Add the toggle button */}
+              <button
+                type="button"
+                className="password-toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
 

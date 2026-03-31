@@ -28,6 +28,7 @@
     rgba(19,30,56,0.25) 60%,
     #0f172a 100%);
   backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
   z-index: 0;
 }
 
@@ -158,7 +159,7 @@
 
 .input-wrapper input {
   width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.75rem;
+  padding: 0.75rem 2.75rem 0.75rem 2.75rem;
   border: 1px solid #d1d5db;
   background: #fff;
   color: #111827;
@@ -173,6 +174,26 @@
 .input-wrapper input:focus {
   border-color: #059669;
   box-shadow: 0 0 0 3px rgba(5,150,105,0.12);
+}
+
+
+.password-toggle-btn {
+  position: absolute;
+  right: 1rem; /* Aligns it nicely on the right edge */
+  background: none;
+  border: none;
+  color: #9ca3af; /* Matches your Mail/Lock icon color */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  z-index: 3; /* Keeps it above the input */
+  transition: color 0.15s;
+}
+
+.password-toggle-btn:hover {
+  color: #059669; /* Turns green to match your theme on hover */
 }
 
 .w-full {

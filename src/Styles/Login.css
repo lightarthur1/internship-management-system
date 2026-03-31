@@ -99,6 +99,25 @@
   align-items: center;
 }
 
+/* Push the icon to the right */
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #64748b; /* Gray color to match your icons */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.password-toggle-btn:hover {
+  color: #1e293b; /* Darker on hover */
+}
+
 .input-icon {
   position: absolute;
   left: 1rem;
@@ -108,7 +127,7 @@
 
 .input-wrapper input {
   width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.75rem;
+  padding: 0.75rem 2.75rem 0.75rem 2.75rem;
   border: 1px solid #d1d5db;
   background: #fff;
   color: #111827;

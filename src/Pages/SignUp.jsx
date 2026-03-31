@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from "../Context/AuthContext";
-import { Layout, Mail, Lock, User, Briefcase, GraduationCap, Users, AlertCircle } from 'lucide-react';
+import { Layout, Mail, Lock, User, Briefcase, GraduationCap, Users, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import '../Styles/SignUp.css';
 
 // ── Admin role is intentionally NOT listed here.
@@ -27,6 +27,7 @@ const Signup = () => {
   const [password, setPassword] = useState('');
   const [error,    setError]    = useState('');
   const [loading,  setLoading]  = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { signup } = useAuth();
   const navigate   = useNavigate();
@@ -102,7 +103,16 @@ const Signup = () => {
             <label>Password</label>
             <div className="input-wrapper">
               <Lock className="input-icon" size={18} />
-              <input type="password" placeholder="At least 6 characters" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+              <input type={showPassword ? "text" : "password"} placeholder="At least 6 characters" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+
+              {/* 3. Add toggle button */}
+              <button
+                type="button"
+                className="password-toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
 
